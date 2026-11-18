@@ -1,0 +1,53 @@
+{
+  "ip": "151.243.241.250",
+  "port": 2788,
+  "debug": {
+    "ping": true,
+    "query": false,
+    "bedrock": false,
+    "srv": true,
+    "querymismatch": false,
+    "ipinsrv": false,
+    "cnameinsrv": false,
+    "animatedmotd": false,
+    "cachehit": false,
+    "apiversion": 3,
+    "dns": {
+      "records": [
+        {
+          "name": "_minecraft._tcp.play.trix-islands.gg",
+          "type": "SRV",
+          "priority": 0,
+          "weight": 5,
+          "port": 2788,
+          "target": "play.trix-islands.gg"
+        },
+        {
+          "name": "play.trix-islands.gg",
+          "type": "A",
+          "address": "151.243.241.250"
+        }
+      ]
+    }
+  },
+  "motd": {
+    "raw": [
+      "§6§lTRIX-ISLANDS.GG §8| §fLobby §7· §eBoxPvP §7· §dParty §7· §aCreators§r"
+    ],
+    "clean": [
+      "TRIX-ISLANDS.GG | Lobby · BoxPvP · Party · Creators"
+    ]
+  },
+  "players": {
+    "online": 0,
+    "max": 1000
+  },
+  "version": "Lattice 26.3",
+  "online": true,
+  "protocol": {
+    "version": 777,
+    "name": "26.3"
+  },
+  "hostname": "play.trix-islands.gg",
+  "eula_blocked": false
+}

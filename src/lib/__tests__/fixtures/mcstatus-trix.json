@@ -1,0 +1,25 @@
+{
+  "online": true,
+  "host": "play.trix-islands.gg",
+  "port": 25565,
+  "ip_address": "151.243.241.250",
+  "eula_blocked": false,
+  "srv_record": {
+    "host": "play.trix-islands.gg",
+    "port": 2788
+  },
+  "version": {
+    "name_raw": "Lattice 1.8.x",
+    "name_clean": "Lattice 1.8.x",
+    "protocol": 47
+  },
+  "players": {
+    "online": 0,
+    "max": 1000,
+    "list": []
+  },
+  "motd": {
+    "raw": "§6§lTRIX-ISLANDS.GG §8| §fLobby §7· §eBoxPvP §7· §dParty §7· §aCreators",
+    "clean": "TRIX-ISLANDS.GG | Lobby · BoxPvP · Party · Creators"
+  }
+}

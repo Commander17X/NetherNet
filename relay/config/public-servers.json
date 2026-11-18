@@ -1,0 +1,21 @@
+{
+  "featured": {
+    "id": "trix-islands",
+    "name": "Trix Islands",
+    "bedrockHost": "play.trix-islands.gg",
+    "javaHost": "play.trix-islands.gg",
+    "javaPort": 2788,
+    "description": "Featured Java server — Bedrock players connect via NetherNet relay (SRV often points to port 2788).",
+    "tags": ["featured", "survival"]
+  },
+  "servers": [
+    {
+      "id": "trix-islands",
+      "name": "Trix Islands",
+      "javaHost": "play.trix-islands.gg",
+      "javaPort": 2788,
+      "description": "Featured community server",
+      "tags": ["featured", "survival"]
+    }
+  ]
+}

@@ -1,0 +1,23 @@
+services:
+  relay:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${PORT:-8787}:8787"
+      # Bedrock UDP range (adjust if you change PORT_POOL_*)
+      - "19132-19142:19132-19142/udp"
+    environment:
+      PUBLIC_HOST: ${PUBLIC_HOST:-localhost}
+      RELAY_API_TOKEN: ${RELAY_API_TOKEN:-}
+      PORT: 8787
+      GEYSER_MODE: ${GEYSER_MODE:-docker}
+      ALLOW_PRIVATE_TARGETS: ${ALLOW_PRIVATE_TARGETS:-false}
+      RATE_LIMIT_MAX: ${RATE_LIMIT_MAX:-60}
+    volumes:
+      - ./config:/app/config:ro
+      - geyser-sessions:/app/.geyser-sessions
+    restart: unless-stopped
+
+volumes:
+  geyser-sessions:

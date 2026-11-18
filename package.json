@@ -8,8 +8,14 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "export": "expo export",
     "test": "jest",
+    "test:relay": "npm run test --prefix relay",
+    "test:all": "npm test && npm run test:relay",
     "typecheck": "tsc --noEmit",
+    "typecheck:relay": "npm run build --prefix relay",
+    "build:relay": "npm run build --prefix relay",
+    "dev:relay": "npm run dev --prefix relay",
     "lint": "expo lint"
   },
   "dependencies": {

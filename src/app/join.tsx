@@ -45,7 +45,7 @@ export default function JoinModalScreen() {
 
   const serverName = params.name ?? "Server";
 
-  const onJoinBedrock = useCallback(async () => {
+  const onJoin = useCallback(async () => {
     setBusy(true);
     setStatusLine(undefined);
     try {
@@ -59,46 +59,40 @@ export default function JoinModalScreen() {
       );
 
       const settings = await loadSettings();
-      let relayHost = withHints.host;
-      let relayPort = withHints.port;
+      let joinHost = withHints.host;
+      let joinPort = withHints.port;
+      let joinDisplayHost = withHints.displayHost;
 
-      if (edition === "bedrock") {
+      if (edition === "java") {
         try {
-          const authHeaders = settings.relayToken
-            ? { Authorization: `Bearer ${settings.relayToken}` }
-            : undefined;
-          const fetchWithAuth: typeof fetch = (input, init) =>
-            fetch(input, {
-              ...init,
-              headers: {
-                ...(init?.headers as Record<string, string> | undefined),
-                ...authHeaders,
-              },
-            });
           const client = new RelayClient({
             baseUrl: settings.relayBaseUrl,
-            fetch: fetchWithAuth,
+            apiToken: settings.relayToken || undefined,
           });
           const session = await client.createSession({
-            serverHost: withHints.host,
-            serverPort: withHints.port,
-            edition: "bedrock",
+            javaHost: withHints.host,
+            javaPort: withHints.port,
           });
-          relayHost = session.serverHost;
-          relayPort = session.serverPort;
+          joinHost = session.bedrockHost;
+          joinPort = session.bedrockPort;
+          joinDisplayHost = session.bedrockHost;
           setStatusLine(`Relay session ${session.id.slice(0, 8)}…`);
         } catch (err) {
           setStatusLine(
             err instanceof Error ? `Relay unavailable: ${err.message}` : "Relay unavailable",
           );
-          // Fall through with direct host for local dev / offline relay.
+          Alert.alert(
+            "Relay required",
+            "Java servers need a running NetherNet relay. Check Settings → relay URL.",
+          );
+          return;
         }
       }
 
       const url = buildAddExternalServerUrlFromParsed(serverName, {
-        host: relayHost,
-        port: relayPort,
-        displayHost: withHints.displayHost,
+        host: joinHost,
+        port: joinPort,
+        displayHost: joinDisplayHost,
       });
       await Linking.openURL(url);
     } catch (err) {
@@ -122,7 +116,9 @@ export default function JoinModalScreen() {
       <SafeAreaView style={styles.safe} edges={["bottom"]}>
         <ScrollView contentContainerStyle={styles.content}>
           <Text style={styles.title}>Join {serverName}</Text>
-          <Text style={styles.lead}>Pick how you play — Bedrock opens minecraft:// with relay when configured.</Text>
+          <Text style={styles.lead}>
+            Java worlds open in Bedrock via your relay (Geyser). Native Bedrock servers connect directly.
+          </Text>
           <EditionPicker value={edition} onChange={setEdition} />
           <GlassPanel style={styles.panel}>
             <Text style={styles.label}>TARGET</Text>
@@ -130,14 +126,19 @@ export default function JoinModalScreen() {
             {statusLine ? <Text style={styles.status}>{statusLine}</Text> : null}
           </GlassPanel>
           <View style={styles.actions}>
-            {edition === "bedrock" ? (
-              <PixelButton
-                label={busy ? "OPENING..." : "OPEN MINECRAFT (BEDROCK)"}
-                onPress={() => void onJoinBedrock()}
-              />
-            ) : (
-              <PixelButton label="JAVA INSTRUCTIONS" onPress={onPickJava} />
-            )}
+            <PixelButton
+              label={
+                busy
+                  ? "OPENING..."
+                  : edition === "java"
+                    ? "JOIN VIA BEDROCK (RELAY)"
+                    : "OPEN MINECRAFT (BEDROCK)"
+              }
+              onPress={() => void onJoin()}
+            />
+            {edition === "java" ? (
+              <PixelButton label="PC JAVA INSTRUCTIONS" variant="ghost" onPress={onPickJava} />
+            ) : null}
             <PixelButton label="CLOSE" variant="ghost" onPress={() => router.back()} />
           </View>
         </ScrollView>

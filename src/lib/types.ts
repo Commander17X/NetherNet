@@ -36,20 +36,26 @@ export interface ServerStatus {
   retrievedAt?: number;
 }
 
+export type RelayAuthMode = "online" | "offline";
+
+/** Mirrors `SessionRecord` from `relay/src/types.ts`. */
 export interface RelaySession {
   id: string;
-  serverHost: string;
-  serverPort: number;
-  edition: Edition;
+  javaHost: string;
+  javaPort: number;
+  authMode: RelayAuthMode;
+  bedrockHost: string;
+  bedrockPort: number;
+  publicHost: string;
   createdAt: string;
-  expiresAt: string;
-  joinToken?: string;
+  targetKey: string;
 }
 
 export interface CreateRelaySessionInput {
-  serverHost: string;
-  serverPort: number;
-  edition?: Edition;
+  javaHost: string;
+  javaPort: number;
+  authMode?: RelayAuthMode;
+  reuse?: boolean;
 }
 
 export interface ParsedAddress {

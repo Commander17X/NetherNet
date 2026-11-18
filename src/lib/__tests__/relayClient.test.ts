@@ -3,12 +3,14 @@ import { RelayClient, RelayClientError } from "../relayClient";
 describe("RelayClient", () => {
   const session = {
     id: "sess_abc",
-    serverHost: "play.trix-islands.gg",
-    serverPort: 2788,
-    edition: "java" as const,
+    javaHost: "play.trix-islands.gg",
+    javaPort: 2788,
+    authMode: "online" as const,
+    bedrockHost: "relay.example",
+    bedrockPort: 19132,
+    publicHost: "relay.example",
     createdAt: "2026-01-01T00:00:00.000Z",
-    expiresAt: "2026-01-01T01:00:00.000Z",
-    joinToken: "token",
+    targetKey: "play.trix-islands.gg:2788:online",
   };
 
   it("POST /v1/sessions", async () => {
@@ -23,8 +25,8 @@ describe("RelayClient", () => {
     });
 
     const created = await client.createSession({
-      serverHost: "play.trix-islands.gg",
-      serverPort: 2788,
+      javaHost: "play.trix-islands.gg",
+      javaPort: 2788,
     });
 
     expect(created).toEqual(session);
@@ -32,10 +34,29 @@ describe("RelayClient", () => {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({
-        serverHost: "play.trix-islands.gg",
-        serverPort: 2788,
-        edition: "java",
+        javaHost: "play.trix-islands.gg",
+        javaPort: 2788,
+        authMode: "online",
+        reuse: true,
       }),
+    });
+  });
+
+  it("sends API token on mutating routes", async () => {
+    const fetchMock = jest.fn().mockResolvedValue({
+      ok: true,
+      json: async () => session,
+    } satisfies Partial<Response>);
+
+    const client = new RelayClient({
+      baseUrl: "https://relay.example",
+      apiToken: "secret",
+      fetch: fetchMock as unknown as typeof fetch,
+    });
+
+    await client.createSession({ javaHost: "h", javaPort: 25565 });
+    expect(fetchMock.mock.calls[0]?.[1]?.headers).toMatchObject({
+      Authorization: "Bearer secret",
     });
   });
 
@@ -66,6 +87,7 @@ describe("RelayClient", () => {
     await client.deleteSession("sess_abc");
     expect(fetchMock).toHaveBeenCalledWith("https://relay.example/v1/sessions/sess_abc", {
       method: "DELETE",
+      headers: {},
     });
   });
 

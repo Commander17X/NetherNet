@@ -1,0 +1,12 @@
+[
+  {
+    "id": "trix-islands",
+    "name": "Trix Islands",
+    "host": "play.trix-islands.gg",
+    "port": null,
+    "edition": "java",
+    "featured": true,
+    "authMode": "online",
+    "description": "Lobby, BoxPvP, parties, and creator islands."
+  }
+]

@@ -1,52 +1,92 @@
 import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
+import { LinearGradient } from "expo-linear-gradient";
+import { useEffect } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { tap } from "@/lib/haptics";
-import { colors, space } from "@/theme";
+import { colors, fillParent, space } from "@/theme";
+import { PixelLabel } from "./hud/PixelLabel";
 
 type TabBarProps = {
   state: { index: number; routes: { key: string; name: string }[] };
   onSelect: (routeKey: string) => void;
 };
 
-const ITEMS: Record<string, { label: string; icon: keyof typeof Ionicons.glyphMap; active: keyof typeof Ionicons.glyphMap }> = {
-  index: { label: "Servers", icon: "server-outline", active: "server" },
+type Slot = { label: string; icon: keyof typeof Ionicons.glyphMap; active: keyof typeof Ionicons.glyphMap };
+
+const SLOTS: Record<string, Slot> = {
+  index: { label: "Lobby", icon: "grid-outline", active: "grid" },
   add: { label: "Add", icon: "add-circle-outline", active: "add-circle" },
   favorites: { label: "Favorites", icon: "star-outline", active: "star" },
   settings: { label: "Settings", icon: "settings-outline", active: "settings" },
 };
 
+const SLOT_SIZE = 62;
+const SLOT_GAP = 6;
+const BAR_PADDING = 6;
+const BAR_HEIGHT = SLOT_SIZE + BAR_PADDING * 2;
+
 export function useTabContentInset(): number {
   const insets = useSafeAreaInsets();
-  return 16 + 56 + Math.max(insets.bottom, 8);
+  return BAR_HEIGHT + Math.max(insets.bottom, space.sm) + space.lg;
 }
 
 export function TabBar({ state, onSelect }: TabBarProps) {
   const insets = useSafeAreaInsets();
+  const selector = useSharedValue(state.index * (SLOT_SIZE + SLOT_GAP));
+
+  useEffect(() => {
+    selector.value = withSpring(state.index * (SLOT_SIZE + SLOT_GAP), { damping: 18, stiffness: 240 });
+  }, [selector, state.index]);
+
+  const selectorStyle = useAnimatedStyle(() => ({ transform: [{ translateX: selector.value }] }));
 
   return (
-    <View style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, space.sm) }]}>
-      <BlurView intensity={48} tint="dark" style={StyleSheet.absoluteFill} />
-      <View style={styles.row}>
+    <View pointerEvents="box-none" style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, space.sm) }]}>
+      <LinearGradient
+        pointerEvents="none"
+        colors={["rgba(6,8,12,0)", "rgba(6,8,12,0.92)"]}
+        style={StyleSheet.absoluteFill}
+      />
+      <View accessibilityRole="tablist" style={styles.bar}>
+        <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />
+        <View pointerEvents="none" style={styles.barTint} />
+        <Animated.View pointerEvents="none" style={[styles.selector, selectorStyle]} />
         {state.routes.map((route, index) => {
-          const item = ITEMS[route.name] ?? { label: route.name, icon: "ellipse-outline", active: "ellipse" };
+          const slot = SLOTS[route.name] ?? { label: route.name, icon: "ellipse-outline", active: "ellipse" };
           const selected = state.index === index;
           return (
             <Pressable
               key={route.key}
               accessibilityRole="tab"
-              accessibilityLabel={item.label}
+              accessibilityLabel={slot.label}
               accessibilityState={{ selected }}
               onPress={() => {
-                tap("light");
+                if (!selected) {
+                  tap("light");
+                }
                 onSelect(route.key);
               }}
-              style={styles.item}
+              style={[styles.slot, selected && styles.slotSelected]}
             >
-              <Ionicons name={selected ? item.active : item.icon} size={24} color={selected ? colors.accent : colors.tertiary} />
-              <Text style={[styles.label, selected && styles.selected]}>{item.label}</Text>
+              <PixelLabel size={6} color={selected ? colors.accent : "rgba(255,255,255,0.28)"} style={styles.key}>
+                {String(index + 1)}
+              </PixelLabel>
+              <Ionicons
+                name={selected ? slot.active : slot.icon}
+                size={24}
+                color={selected ? colors.accent : colors.secondary}
+              />
+              <Text
+                maxFontSizeMultiplier={1.2}
+                numberOfLines={1}
+                style={[styles.label, selected && styles.labelSelected]}
+              >
+                {slot.label}
+              </Text>
             </Pressable>
           );
         })}
@@ -57,27 +97,69 @@ export function TabBar({ state, onSelect }: TabBarProps) {
 
 const styles = StyleSheet.create({
   wrap: {
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.stroke,
-    overflow: "hidden",
-    backgroundColor: "rgba(12,14,18,0.72)",
-  },
-  row: {
-    flexDirection: "row",
-    paddingTop: space.sm,
-  },
-  item: {
-    flex: 1,
+    position: "absolute",
+    left: 0,
+    right: 0,
+    bottom: 0,
     alignItems: "center",
-    gap: 4,
-    minHeight: 48,
+    paddingTop: space.lg,
+  },
+  bar: {
+    flexDirection: "row",
+    gap: SLOT_GAP,
+    padding: BAR_PADDING,
+    borderRadius: 14,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: colors.strokeStrong,
+    shadowColor: "#000",
+    shadowOpacity: 0.5,
+    shadowRadius: 24,
+    shadowOffset: { width: 0, height: 12 },
+  },
+  barTint: {
+    ...fillParent,
+    backgroundColor: "rgba(10,12,18,0.72)",
+  },
+  selector: {
+    position: "absolute",
+    top: BAR_PADDING - 3,
+    left: BAR_PADDING - 3,
+    width: SLOT_SIZE + 6,
+    height: SLOT_SIZE + 6,
+    borderRadius: 11,
+    borderWidth: 2.5,
+    borderColor: colors.accent,
+    backgroundColor: "rgba(245,178,27,0.08)",
+  },
+  slot: {
+    width: SLOT_SIZE,
+    height: SLOT_SIZE,
+    borderRadius: 8,
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 3,
+    backgroundColor: "rgba(255,255,255,0.04)",
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.5)",
+    borderTopColor: "rgba(255,255,255,0.06)",
+  },
+  slotSelected: {
+    backgroundColor: "transparent",
+    borderColor: "transparent",
+  },
+  key: {
+    position: "absolute",
+    top: 5,
+    left: 6,
   },
   label: {
     color: colors.tertiary,
-    fontSize: 11,
-    fontWeight: "600",
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 0.1,
   },
-  selected: {
-    color: colors.accent,
+  labelSelected: {
+    color: colors.text,
   },
 });

@@ -115,6 +115,7 @@ const styles = StyleSheet.create({
     fontWeight: "600",
     fontVariant: ["tabular-nums"],
     minWidth: 64,
+    flexShrink: 0,
     textAlign: "right",
   },
 });

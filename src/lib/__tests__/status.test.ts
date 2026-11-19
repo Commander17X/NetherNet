@@ -112,10 +112,12 @@ describe("status decoding", () => {
     expect(decodeMcstatus("nope", "bedrock")).toBeNull();
   });
 
-  it("keeps a data-uri favicon", () => {
-    const icon = `data:image/png;base64,${"A".repeat(80)}`;
-    const decoded = decodeMcstatus({ ...trixMcstatus, icon }, "java");
-    expect(decoded?.favicon).toBe(icon);
+  it("keeps a real png favicon and drops a fake one", () => {
+    const png =
+      "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+    const decoded = decodeMcstatus({ ...trixMcstatus, icon: `data:image/png;base64,${png}` }, "java");
+    expect(decoded?.favicon).toBe(`data:image/png;base64,${png}`);
+    expect(decodeMcstatus({ ...trixMcstatus, icon: `data:image/png;base64,${"A".repeat(80)}` }, "java")?.favicon).toBeNull();
   });
 });
 

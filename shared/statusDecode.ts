@@ -1,3 +1,4 @@
+import { parseFavicon } from "./favicon";
 import { motdPlain, parseMotd, type MotdLine } from "./motd";
 
 export type ServerEdition = "java" | "bedrock";
@@ -42,16 +43,7 @@ function readPlayers(body: Record<string, unknown>): { online: number | null; ma
 }
 
 function readFavicon(value: unknown): string | null {
-  if (typeof value !== "string" || value.length < 16) {
-    return null;
-  }
-  if (value.startsWith("data:image")) {
-    return value;
-  }
-  if (/^[A-Za-z0-9+/=\s]+$/.test(value) && value.length > 64) {
-    return `data:image/png;base64,${value.replace(/\s/g, "")}`;
-  }
-  return null;
+  return parseFavicon(value);
 }
 
 function readSrv(body: Record<string, unknown>): { host: string | null; port: number | null } {

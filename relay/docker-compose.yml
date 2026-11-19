@@ -1,0 +1,29 @@
+services:
+  relay:
+    # Geyser has to reach client.discovery.minecraft-services.net over HTTPS.
+    # If that times out from the bridge network, switch this service to
+    # network_mode: host and remove the ports list.
+    build:
+      context: ..
+      dockerfile: relay/Dockerfile
+    ports:
+      - "8787:8787"
+      - "19132-19151:19132-19151/tcp"
+      - "19132-19151:19132-19151/udp"
+    environment:
+      PORT: 8787
+      PUBLIC_HOST: ${PUBLIC_HOST:-127.0.0.1}
+      RELAY_TOKEN: ${RELAY_TOKEN:-}
+      DATA_DIR: /data
+      GEYSER_JAR: /opt/geyser/Geyser-Standalone.jar
+      JAVA_BIN: java
+      PORT_RANGE_START: 19132
+      PORT_RANGE_END: 19151
+      SESSION_TTL_MS: ${SESSION_TTL_MS:-1200000}
+      MAX_SESSIONS: ${MAX_SESSIONS:-8}
+    volumes:
+      - relay-data:/data
+    restart: unless-stopped
+
+volumes:
+  relay-data:

@@ -216,8 +216,9 @@ export default function ServerDetailScreen() {
         </View>
 
         <AppButton
-          label="Join server"
+          label={offline ? "Try to join" : "Join server"}
           icon="play"
+          variant={offline ? "secondary" : "primary"}
           onPress={() => router.push(`/join/${encodeURIComponent(current.id)}`)}
         />
 

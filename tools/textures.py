@@ -1,4 +1,4 @@
-"""Draw the NetherNet block textures, block icon, wordmark and app icon.
+"""Draw the NetherNet block textures, block icon and wordmark as .webp files.
 
 Every texture is a 16x16 pixel grid made from a fixed seed, so the output is the
 same on every run. Run from the repository root:
@@ -180,32 +180,6 @@ def wordmark(text="NETHERNET"):
     return out
 
 
-def app_icon(icon):
-    """Square app icon: dark dirt, a grass top edge and the block in the middle."""
-    size = 1024
-    texel = 16
-    soil = darken(to_image(dirt(random.Random(21))), 0.5).resize((SIZE * texel, SIZE * texel), Image.NEAREST)
-    canvas = Image.new("RGBA", (size, size), (18, 13, 9, 255))
-    for x in range(0, size, soil.width):
-        for y in range(0, size, soil.height):
-            canvas.alpha_composite(soil, (x, y))
-    edge = to_image(grass_edge(random.Random(22))).resize((SIZE * texel, 8 * texel), Image.NEAREST)
-    for x in range(0, size, edge.width):
-        canvas.alpha_composite(edge, (x, 0))
-    block = icon.resize((icon.width * 2, icon.height * 2), Image.NEAREST)
-    shadow = Image.new("RGBA", block.size, (0, 0, 0, 0))
-    shadow.putalpha(block.split()[3].point(lambda v: int(v * 0.55)))
-    left, top = (size - block.width) // 2, (size - block.height) // 2 + 60
-    canvas.alpha_composite(shadow, (left + 24, top + 36))
-    canvas.alpha_composite(block, (left, top))
-    return canvas.convert("RGB")
-
-
-def save_png(image, path, size):
-    image.resize((size, size), Image.LANCZOS).save(path, "PNG", optimize=True)
-    print(f"{path.relative_to(ROOT)}  {size}x{size}  {path.stat().st_size} bytes")
-
-
 def save(image, path, scale=1):
     path.parent.mkdir(parents=True, exist_ok=True)
     if scale != 1:
@@ -231,12 +205,6 @@ def main():
     icon = block_icon()
     save(icon, APP_DIR / "block.webp")
     save(icon, SITE_DIR / "block.webp")
-    app = app_icon(icon)
-    save_png(app, ROOT / "assets" / "images" / "icon.png", 1024)
-    save_png(app, ROOT / "assets" / "images" / "splash-icon.png", 1024)
-    save_png(app, ROOT / "assets" / "images" / "favicon.png", 64)
-    save_png(app, SITE_DIR / "icon.png", 256)
-    save_png(app, SITE_DIR / "favicon.png", 64)
     mark = wordmark()
     save(mark, APP_DIR / "wordmark@3x.webp", 12)
     save(mark, SITE_DIR / "wordmark.webp", 8)

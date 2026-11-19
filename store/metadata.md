@@ -101,11 +101,9 @@ None. The app does not create an account or attach a user identity to anything i
 
 ### Data Not Linked to You
 
-**Other User Content** — server names, hostnames, and ports.
+None. Answer **No, we do not collect data from this app**.
 
-- Used for: App Functionality
-- Tracked: No
-- Linked to identity: No
+Apple counts data as collected only when it leaves the device in a way that lets the developer or its partners keep it longer than needed to answer the request in real time. NetherNet has no backend of its own. The hostnames below go to public status APIs only to answer that one lookup, and the relay is a server the user runs themselves.
 
 What actually leaves the device:
 
@@ -132,9 +130,7 @@ Support URL: https://commander17x.github.io/NetherNet/support/
 
 Hostnames are sent to the status APIs, and to a relay the user configures. Both pages are in `docs/` and published with GitHub Pages.
 
-Suggested privacy nutrition labels in App Store Connect:
-
-- Other User Content — App Functionality — not linked to identity — not used for tracking
+Privacy label in App Store Connect: **Data Not Collected**.
 
 ---
 

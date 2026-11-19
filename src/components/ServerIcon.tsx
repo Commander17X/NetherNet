@@ -1,57 +1,91 @@
 import { Image } from "expo-image";
 import { useEffect, useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 
 import { cachedFavicon, rememberFavicon } from "@/lib/faviconCache";
-import { colors } from "@/theme";
+import { colors, fillParent } from "@/theme";
 
-const TILES = ["#3C4A63", "#4A3C32", "#2F4A44", "#4A3548", "#3A4060", "#4E4630"];
+const PALETTES = [
+  { base: "#1E2A3D", ink: "#5AA9FF" },
+  { base: "#2D2213", ink: "#F5B21B" },
+  { base: "#14291F", ink: "#43E08C" },
+  { base: "#2B1A2C", ink: "#E07BFF" },
+  { base: "#2C1A1A", ink: "#FF6B74" },
+  { base: "#152A2C", ink: "#55E6F0" },
+];
 
-function tileColor(name: string): string {
-  let hash = 0;
+function hashName(name: string): number {
+  let hash = 2166136261;
   for (let index = 0; index < name.length; index += 1) {
-    hash = (hash + name.charCodeAt(index) * (index + 1)) % TILES.length;
+    hash ^= name.charCodeAt(index);
+    hash = Math.imul(hash, 16777619);
   }
-  return TILES[hash] ?? TILES[0];
+  return hash >>> 0;
 }
 
-export function ServerIcon({
-  name,
-  uri,
-  size = 52,
-}: {
-  name: string;
-  uri?: string | null;
-  size?: number;
-}) {
-  const letter = (name.trim().slice(0, 1) || "?").toUpperCase();
-  const radiusSize = Math.round(size * 0.28);
+export function blockPattern(name: string): boolean[] {
+  const hash = hashName(name.trim().toLowerCase() || "?");
+  const cells: boolean[] = [];
+  for (let row = 0; row < 5; row += 1) {
+    for (let column = 0; column < 5; column += 1) {
+      const mirrored = column < 3 ? column : 4 - column;
+      cells.push(((hash >> (row * 3 + mirrored)) & 1) === 1);
+    }
+  }
+  return cells;
+}
+
+export function ServerIcon({ name, uri, size = 52 }: { name: string; uri?: string | null; size?: number }) {
+  const round = Math.max(4, Math.round(size * 0.16));
+  const frame = { width: size, height: size, borderRadius: round };
 
   if (uri) {
     return (
-      <Image
-        source={{ uri }}
-        style={{ width: size, height: size, borderRadius: radiusSize, backgroundColor: colors.fill }}
-        contentFit="cover"
-        accessibilityLabel={`${name} icon`}
-      />
+      <View style={[styles.frame, frame]}>
+        <Image
+          source={{ uri }}
+          style={StyleSheet.absoluteFill}
+          contentFit="cover"
+          accessibilityLabel={`${name} icon`}
+        />
+        <View pointerEvents="none" style={[styles.bevel, { borderRadius: round }]} />
+      </View>
     );
   }
 
+  const palette = PALETTES[hashName(name) % PALETTES.length] ?? PALETTES[0];
+  const cells = blockPattern(name);
+  const grid = Math.floor((size * 0.62) / 5);
+
   return (
     <View
-      style={[
-        styles.fallback,
-        { width: size, height: size, borderRadius: radiusSize, backgroundColor: tileColor(name) },
-      ]}
+      accessible
+      accessibilityLabel={`${name} icon`}
+      style={[styles.frame, frame, styles.center, { backgroundColor: palette.base }]}
     >
-      <View style={[styles.pixel, { backgroundColor: "rgba(255,255,255,0.14)" }]} />
-      <Text style={[styles.letter, { fontSize: Math.round(size * 0.38) }]}>{letter}</Text>
+      <View style={{ width: grid * 5, height: grid * 5, flexDirection: "row", flexWrap: "wrap" }}>
+        {cells.map((on, index) => (
+          <View
+            key={index}
+            style={{
+              width: grid,
+              height: grid,
+              backgroundColor: on ? palette.ink : "transparent",
+              opacity: on ? 1 : 0,
+            }}
+          />
+        ))}
+      </View>
+      <View pointerEvents="none" style={[styles.bevel, { borderRadius: round }]} />
     </View>
   );
 }
 
-export function useServerFavicon(id: string, raw: string | null | undefined, online: boolean | undefined): string | null {
+export function useServerFavicon(
+  id: string,
+  raw: string | null | undefined,
+  online: boolean | undefined,
+): string | null {
   const [uri, setUri] = useState<string | null>(null);
 
   useEffect(() => {
@@ -84,20 +118,25 @@ export function useServerFavicon(id: string, raw: string | null | undefined, onl
 }
 
 const styles = StyleSheet.create({
-  fallback: {
+  frame: {
+    overflow: "hidden",
+    backgroundColor: colors.fill,
+    borderWidth: 1,
+    borderColor: "rgba(0,0,0,0.6)",
+  },
+  center: {
     alignItems: "center",
     justifyContent: "center",
-    overflow: "hidden",
   },
-  pixel: {
-    position: "absolute",
-    width: "42%",
-    height: "42%",
-    left: 0,
-    top: 0,
-  },
-  letter: {
-    color: colors.text,
-    fontWeight: "700",
+  bevel: {
+    ...fillParent,
+    borderTopWidth: 1,
+    borderLeftWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.18)",
+    borderLeftColor: "rgba(255,255,255,0.10)",
+    borderBottomWidth: 1,
+    borderRightWidth: 1,
+    borderBottomColor: "rgba(0,0,0,0.35)",
+    borderRightColor: "rgba(0,0,0,0.25)",
   },
 });

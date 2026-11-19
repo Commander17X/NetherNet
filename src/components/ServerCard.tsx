@@ -95,11 +95,11 @@ export function ServerCard({
               tap("medium");
               onJoin();
             }}
-            style={({ pressed }) => [styles.join, pressed && styles.joinPressed]}
+            style={({ pressed }) => [styles.join, offline && styles.joinMuted, pressed && styles.joinPressed]}
             accessibilityRole="button"
             accessibilityLabel={`Join ${server.name}`}
           >
-            <Text style={styles.joinLabel}>Join</Text>
+            <Text style={[styles.joinLabel, offline && styles.joinLabelMuted]}>Join</Text>
           </Pressable>
         </View>
       </GlassPanel>
@@ -177,12 +177,19 @@ const styles = StyleSheet.create({
     borderBottomWidth: 2,
     borderBottomColor: "rgba(0,0,0,0.25)",
   },
+  joinMuted: {
+    backgroundColor: colors.fillStrong,
+    borderTopColor: "rgba(255,255,255,0.12)",
+  },
   joinPressed: {
-    backgroundColor: colors.accentPressed,
+    opacity: 0.8,
   },
   joinLabel: {
     color: colors.accentInk,
     fontSize: 15,
     fontWeight: "800",
+  },
+  joinLabelMuted: {
+    color: colors.text,
   },
 });

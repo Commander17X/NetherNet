@@ -4,47 +4,80 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Support — NetherNet</title>
+  <meta name="theme-color" content="#120d09">
   <link rel="icon" href="../assets/favicon.png">
-  <link rel="stylesheet" href="../styles.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="../styles.css">
 </head>
 <body>
-  <div class="wrap">
-    <header class="site">
-      <a class="brand" href="../">NETHERNET</a>
-      <nav>
+  <header class="topbar">
+    <div class="wrap">
+      <a class="brand" href="../" aria-label="NetherNet home">
+        <img class="block" src="../assets/block.webp" alt="" width="40" height="40">
+        <img class="wordmark" src="../assets/wordmark.webp" alt="NetherNet" width="190" height="32">
+      </a>
+      <nav aria-label="Main">
         <a href="../">Home</a>
         <a href="../privacy/">Privacy</a>
-        <a href="./" aria-current="page">Support</a>
+        <a href="../support/" aria-current="page">Support</a>
+        <a href="https://github.com/Commander17X/NetherNet">Source</a>
       </nav>
-    </header>
-    <main>
-      <h1>Support</h1>
-      <p class="lead">NetherNet does not have a support desk or an account you can write to. Questions, bugs, and ideas go through GitHub issues.</p>
+    </div>
+  </header>
+
+  <section class="band band-small" aria-labelledby="title">
+    <div class="wrap">
+      <h1 id="title">Support</h1>
+      <p class="lead">Questions, bugs and ideas go through GitHub issues. There is no support desk and no account to write to.</p>
       <div class="actions">
         <a class="button" href="https://github.com/Commander17X/NetherNet/issues">Open an issue</a>
-        <a class="button secondary" href="https://github.com/Commander17X/NetherNet">Source</a>
+        <a class="button secondary" href="https://github.com/Commander17X/NetherNet">View source</a>
       </div>
-      <section class="grid">
-        <article class="card">
-          <h3>Bedrock will not open</h3>
-          <p>Install the official Bedrock app, then tap Join again. You can also add the host and port by hand in that app’s server list.</p>
+    </div>
+  </section>
+
+  <main class="wrap">
+    <section aria-label="Common problems">
+      <div class="list">
+        <article class="panel row plain">
+          <img class="tile" src="../assets/grass.webp" alt="" width="64" height="64">
+          <div>
+            <h3>Bedrock will not open</h3>
+            <p>Install the official Bedrock app, then tap Join again. You can also add the host and port by hand in that app’s server list.</p>
+          </div>
         </article>
-        <article class="card">
-          <h3>Java stays on Starting</h3>
-          <p>Settings needs a relay address the phone can reach. On a home network that is the computer’s LAN address, not 127.0.0.1.</p>
+        <article class="panel row plain">
+          <img class="tile" src="../assets/stone.webp" alt="" width="64" height="64">
+          <div>
+            <h3>Java stays on Starting</h3>
+            <p>Settings needs a relay address the phone can reach. On a home network that is the computer’s LAN address, not 127.0.0.1.</p>
+          </div>
         </article>
-        <article class="card">
-          <h3>Privacy</h3>
-          <p>What leaves the phone is described on the <a href="../privacy/">privacy policy</a>.</p>
+        <article class="panel row plain">
+          <img class="tile" src="../assets/dirt.webp" alt="" width="64" height="64">
+          <div>
+            <h3>Privacy</h3>
+            <p>What leaves the phone is described in the <a href="../privacy/">privacy policy</a>.</p>
+          </div>
         </article>
-      </section>
-    </main>
-    <footer class="site">
-      <a class="button secondary" href="https://github.com/Commander17X/NetherNet/issues">GitHub issues</a>
-    </footer>
-  </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="grass">
+    <div class="wrap">
+      <div class="panel footer-panel">
+        <img class="block" src="../assets/block.webp" alt="" width="56" height="56">
+        <p>Not an official Minecraft product. Not approved by or associated with Mojang or Microsoft.</p>
+        <nav aria-label="Footer">
+          <a href="../privacy/">Privacy</a>
+          <a href="../support/">Support</a>
+          <a href="https://github.com/Commander17X/NetherNet">GitHub</a>
+        </nav>
+      </div>
+    </div>
+  </footer>
 </body>
 </html>

@@ -1,86 +1,141 @@
-import { Pressable, StyleSheet, Text } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 
 import { tap } from "@/lib/haptics";
-import { colors, radius, space } from "@/theme";
+import { colors, fillParent, radius, space } from "@/theme";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger";
 
-const faces: Record<Variant, { background: string; label: string; border: string }> = {
-  primary: { background: colors.accent, label: colors.accentInk, border: "transparent" },
-  secondary: { background: colors.fill, label: colors.text, border: colors.stroke },
-  ghost: { background: "transparent", label: colors.secondary, border: "transparent" },
-  danger: { background: "rgba(232,93,93,0.14)", label: colors.danger, border: "transparent" },
+const faces: Record<Variant, { background: string; label: string; border: string; top: string; bottom: string }> = {
+  primary: {
+    background: colors.accent,
+    label: colors.accentInk,
+    border: "rgba(0,0,0,0.35)",
+    top: "rgba(255,255,255,0.45)",
+    bottom: "rgba(0,0,0,0.22)",
+  },
+  secondary: {
+    background: "rgba(255,255,255,0.08)",
+    label: colors.text,
+    border: colors.strokeStrong,
+    top: "rgba(255,255,255,0.10)",
+    bottom: "rgba(0,0,0,0.3)",
+  },
+  ghost: {
+    background: "transparent",
+    label: colors.secondary,
+    border: "transparent",
+    top: "transparent",
+    bottom: "transparent",
+  },
+  danger: {
+    background: colors.dangerSoft,
+    label: colors.danger,
+    border: "rgba(255,92,92,0.3)",
+    top: "rgba(255,255,255,0.06)",
+    bottom: "rgba(0,0,0,0.25)",
+  },
 };
+
+const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
 export function AppButton({
   label,
   onPress,
   variant = "primary",
   disabled = false,
+  busy = false,
   compact = false,
+  icon,
+  accessibilityHint,
 }: {
   label: string;
   onPress: () => void;
   variant?: Variant;
   disabled?: boolean;
+  busy?: boolean;
   compact?: boolean;
+  icon?: keyof typeof Ionicons.glyphMap;
+  accessibilityHint?: string;
 }) {
   const face = faces[variant];
+  const scale = useSharedValue(1);
+  const pressStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
+  const inactive = disabled || busy;
 
   return (
-    <Pressable
+    <AnimatedPressable
       accessibilityRole="button"
       accessibilityLabel={label}
-      disabled={disabled}
+      accessibilityHint={accessibilityHint}
+      accessibilityState={{ disabled: inactive, busy }}
+      disabled={inactive}
+      onPressIn={() => {
+        scale.set(withSpring(0.97, { damping: 20, stiffness: 400 }));
+      }}
+      onPressOut={() => {
+        scale.set(withSpring(1, { damping: 16, stiffness: 300 }));
+      }}
       onPress={() => {
         tap(variant === "primary" ? "medium" : "light");
         onPress();
       }}
-      style={({ pressed }) => [
+      style={[
         styles.button,
         compact && styles.compact,
-        {
-          backgroundColor: pressed && !disabled ? shade(face.background) : face.background,
-          borderColor: face.border,
-        },
-        pressed && !disabled && styles.pressed,
-        disabled && styles.disabled,
+        { backgroundColor: face.background, borderColor: face.border },
+        disabled && !busy && styles.disabled,
+        pressStyle,
       ]}
     >
-      <Text
-        maxFontSizeMultiplier={1.6}
-        style={[styles.label, compact && styles.compactLabel, { color: face.label }]}
-      >
+      {variant !== "ghost" ? (
+        <View
+          pointerEvents="none"
+          style={[
+            styles.bevel,
+            { borderTopColor: face.top, borderBottomColor: face.bottom, borderRadius: compact ? radius.sm : radius.md },
+          ]}
+        />
+      ) : null}
+      {busy ? (
+        <ActivityIndicator size="small" color={face.label} />
+      ) : icon ? (
+        <Ionicons name={icon} size={compact ? 16 : 19} color={face.label} />
+      ) : null}
+      <Text maxFontSizeMultiplier={1.5} style={[styles.label, compact && styles.compactLabel, { color: face.label }]}>
         {label}
       </Text>
-    </Pressable>
+    </AnimatedPressable>
   );
-}
-
-function shade(color: string): string {
-  if (color === colors.accent) {
-    return colors.accentPressed;
-  }
-  return colors.fillStrong;
 }
 
 const styles = StyleSheet.create({
   button: {
-    minHeight: 50,
-    paddingHorizontal: space.md,
+    minHeight: 52,
+    paddingHorizontal: space.md + space.xs,
     borderRadius: radius.md,
     borderWidth: 1,
+    flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
+    gap: space.sm,
+    overflow: "hidden",
   },
   compact: {
     minHeight: 36,
-    paddingHorizontal: space.sm + 4,
+    paddingHorizontal: space.sm + space.xs,
     borderRadius: radius.sm,
+    gap: space.xs,
+  },
+  bevel: {
+    ...fillParent,
+    borderTopWidth: 1,
+    borderBottomWidth: 2,
   },
   label: {
     fontSize: 17,
-    fontWeight: "600",
+    fontWeight: "700",
     letterSpacing: -0.2,
   },
   compactLabel: {
@@ -88,8 +143,5 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.45,
-  },
-  pressed: {
-    transform: [{ scale: 0.98 }],
   },
 });

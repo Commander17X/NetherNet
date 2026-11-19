@@ -5,7 +5,7 @@ import Animated, { FadeInDown } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppButton } from "@/components/AppButton";
-import { BlockIcon, DirtBand, GrassGround, Wordmark } from "@/components/blocks/Blocks";
+import { CubeMark, DirtBand, GrassGround, Wordmark } from "@/components/blocks/Blocks";
 import { GlassPanel } from "@/components/hud/GlassPanel";
 import { PixelLabel } from "@/components/hud/PixelLabel";
 import { Screen } from "@/components/Screen";
@@ -45,7 +45,7 @@ export function WelcomeGuide({ onContinue }: { onContinue: () => void }) {
       <ScrollView contentContainerStyle={styles.content}>
         <View style={[styles.column, wide && styles.columnWide]}>
           <Animated.View entering={FadeInDown.duration(420)} style={styles.hero}>
-            <BlockIcon size={wide ? 96 : 64} />
+            <CubeMark size={wide ? 112 : 84} />
             <Wordmark height={26} />
             <Text
               accessibilityRole="header"

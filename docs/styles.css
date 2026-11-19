@@ -51,7 +51,7 @@ a:focus-visible, .button:focus-visible { outline: 3px solid var(--grass); outlin
   min-height: 76px;
 }
 .brand { display: inline-flex; align-items: center; gap: 12px; text-decoration: none; }
-.brand .block { width: 40px; height: 40px; }
+.brand .block { width: 44px; height: 44px; }
 .brand .wordmark { height: 32px; width: auto; image-rendering: pixelated; }
 nav { display: flex; align-items: center; gap: 22px; }
 nav a {

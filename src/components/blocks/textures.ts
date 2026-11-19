@@ -6,6 +6,6 @@ export const textures = {
   grassSide: require("../../../assets/images/textures/grass-side.webp"),
   grassEdge: require("../../../assets/images/textures/grass-edge.webp"),
   stone: require("../../../assets/images/textures/stone.webp"),
-  block: require("../../../assets/images/textures/block.webp"),
+  cube: require("../../../assets/images/textures/cube.webp"),
   wordmark: require("../../../assets/images/textures/wordmark.webp"),
 };

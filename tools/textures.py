@@ -203,7 +203,6 @@ def main():
     for name in ("dirt", "dirt-edge"):
         save(darken(tiles[name], 0.52), APP_DIR / f"{name}-dark@3x.webp", 12)
     icon = block_icon()
-    save(icon, APP_DIR / "block.webp")
     save(icon, SITE_DIR / "block.webp")
     mark = wordmark()
     save(mark, APP_DIR / "wordmark@3x.webp", 12)

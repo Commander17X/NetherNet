@@ -45,8 +45,9 @@ export function GrassGround({ height }: { height: number }) {
   );
 }
 
-export function BlockIcon({ size }: { size: number }) {
-  return <Image source={textures.block} style={{ width: size, height: size }} accessibilityIgnoresInvertColors />;
+/** The app icon's cube, half bedrock and half nether, on a clear background. */
+export function CubeMark({ size }: { size: number }) {
+  return <Image source={textures.cube} style={{ width: size, height: size }} accessibilityIgnoresInvertColors />;
 }
 
 export function Wordmark({ height = 26 }: { height?: number }) {
@@ -64,7 +65,7 @@ export function Wordmark({ height = 26 }: { height?: number }) {
 export function BrandMark({ height = 26 }: { height?: number }) {
   return (
     <View style={styles.brand}>
-      <BlockIcon size={height + 4} />
+      <CubeMark size={height + 8} />
       <Wordmark height={height} />
     </View>
   );

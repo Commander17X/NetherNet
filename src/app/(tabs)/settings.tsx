@@ -1,4 +1,5 @@
-import { useFocusEffect } from "expo-router";
+import { useFocusEffect, useRouter } from "expo-router";
+import * as Linking from "expo-linking";
 import { useCallback, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
@@ -6,10 +7,12 @@ import { AppButton } from "@/components/AppButton";
 import { PageHeader, Screen } from "@/components/Screen";
 import { TextField } from "@/components/TextField";
 import { RelayClient } from "@/lib/relayClient";
+import { issuesUrl, privacyPolicyUrl, supportUrl } from "@/lib/links";
 import { loadSettings, saveSettings } from "@/lib/storage";
 import { colors, radius, space } from "@/theme";
 
 export default function SettingsScreen() {
+  const router = useRouter();
   const [relayUrl, setRelayUrl] = useState("");
   const [relayToken, setRelayToken] = useState("");
   const [message, setMessage] = useState("Java servers join through a NetherNet relay you host.");
@@ -77,6 +80,12 @@ export default function SettingsScreen() {
           <Text style={[styles.noteText, { color: tone }]}>{message}</Text>
         </View>
         <AppButton label="Save and check" onPress={() => void check()} />
+        <AppButton label="How joining works" variant="secondary" onPress={() => router.push("/welcome")} />
+        <View style={styles.links}>
+          <AppButton label="Privacy policy" variant="ghost" onPress={() => void Linking.openURL(privacyPolicyUrl)} />
+          <AppButton label="Support" variant="ghost" onPress={() => void Linking.openURL(supportUrl)} />
+          <AppButton label="GitHub issues" variant="ghost" onPress={() => void Linking.openURL(issuesUrl)} />
+        </View>
         <Text style={styles.help}>
           Bedrock opens with minecraft:// on the port you typed, or 19132 for a plain domain. Java gets a short Geyser session, then the same link points at the relay.
         </Text>
@@ -105,5 +114,8 @@ const styles = StyleSheet.create({
     color: colors.tertiary,
     fontSize: 13,
     lineHeight: 18,
+  },
+  links: {
+    gap: 0,
   },
 });

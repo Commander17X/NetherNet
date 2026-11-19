@@ -47,6 +47,7 @@ export default function RootLayout() {
             }}
           />
           <Stack.Screen name="edit/[id]" />
+          <Stack.Screen name="welcome" options={{ presentation: "modal" }} />
         </Stack>
       </FontReadyContext.Provider>
     </GestureHandlerRootView>

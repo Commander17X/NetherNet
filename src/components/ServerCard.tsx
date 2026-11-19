@@ -30,7 +30,13 @@ export function ServerCard({
 
   return (
     <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 40).duration(320)}>
-      <Pressable onPress={onOpen} accessibilityRole="button" accessibilityLabel={server.name} style={styles.card}>
+      <Pressable
+        onPress={onOpen}
+        accessibilityRole="button"
+        accessibilityLabel={server.name}
+        accessibilityHint="Opens server details"
+        style={styles.card}
+      >
         <View style={styles.top}>
           <ServerIcon name={server.name} uri={icon} />
           <View style={styles.copy}>

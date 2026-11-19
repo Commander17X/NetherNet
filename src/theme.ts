@@ -7,7 +7,7 @@ export const colors = {
   stroke: "rgba(255,255,255,0.08)",
   text: "#F4F6FA",
   secondary: "#A8B0C0",
-  tertiary: "#727B8C",
+  tertiary: "#8B95A7",
   accent: "#E8A317",
   accentPressed: "#C88A0C",
   accentInk: "#1B1406",

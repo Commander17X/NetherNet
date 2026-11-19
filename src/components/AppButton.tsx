@@ -1,5 +1,4 @@
-import { ReactNode } from "react";
-import { Pressable, StyleSheet, Text, View, ViewStyle } from "react-native";
+import { Pressable, StyleSheet, Text } from "react-native";
 
 import { tap } from "@/lib/haptics";
 import { colors, radius, space } from "@/theme";
@@ -48,7 +47,12 @@ export function AppButton({
         disabled && styles.disabled,
       ]}
     >
-      <Text style={[styles.label, compact && styles.compactLabel, { color: face.label }]}>{label}</Text>
+      <Text
+        maxFontSizeMultiplier={1.6}
+        style={[styles.label, compact && styles.compactLabel, { color: face.label }]}
+      >
+        {label}
+      </Text>
     </Pressable>
   );
 }
@@ -58,10 +62,6 @@ function shade(color: string): string {
     return colors.accentPressed;
   }
   return colors.fillStrong;
-}
-
-export function Stack({ children, gap = space.md, style }: { children: ReactNode; gap?: number; style?: ViewStyle }) {
-  return <View style={[{ gap }, style]}>{children}</View>;
 }
 
 const styles = StyleSheet.create({

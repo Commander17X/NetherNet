@@ -8,8 +8,12 @@ export function PageHeader({ title, subtitle }: { title: string; subtitle?: stri
   const pixel = usePixelFont();
   return (
     <View style={styles.header}>
-      <Text style={[styles.logo, { fontFamily: pixel }]}>NETHERNET</Text>
-      <Text style={styles.title}>{title}</Text>
+      <Text maxFontSizeMultiplier={1.2} style={[styles.logo, { fontFamily: pixel }]}>
+        NETHERNET
+      </Text>
+      <Text accessibilityRole="header" maxFontSizeMultiplier={1.6} style={styles.title}>
+        {title}
+      </Text>
       {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
     </View>
   );
@@ -18,7 +22,6 @@ export function PageHeader({ title, subtitle }: { title: string; subtitle?: stri
 export function Screen({ children, bottomInset = false }: { children: ReactNode; bottomInset?: boolean }) {
   return (
     <View style={styles.root}>
-      <View style={styles.glow} pointerEvents="none" />
       <SafeAreaView style={styles.safe} edges={bottomInset ? ["top", "left", "right", "bottom"] : ["top", "left", "right"]}>
         {children}
       </SafeAreaView>
@@ -30,15 +33,6 @@ const styles = StyleSheet.create({
   root: {
     flex: 1,
     backgroundColor: colors.bg,
-  },
-  glow: {
-    position: "absolute",
-    top: -80,
-    right: -40,
-    width: 220,
-    height: 220,
-    borderRadius: 110,
-    backgroundColor: "rgba(232,163,23,0.12)",
   },
   safe: {
     flex: 1,

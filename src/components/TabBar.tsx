@@ -31,7 +31,7 @@ export function TabBar({ state, onSelect }: TabBarProps) {
           return (
             <Pressable
               key={route.key}
-              accessibilityRole="button"
+              accessibilityRole="tab"
               accessibilityLabel={item.label}
               accessibilityState={{ selected }}
               onPress={() => {

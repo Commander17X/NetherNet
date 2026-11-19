@@ -104,13 +104,15 @@ export function ServerListView({ favoritesOnly = false }: { favoritesOnly?: bool
       }
     >
       <View style={styles.header}>
-        <Text style={[styles.logo, { fontFamily: pixel }]}>NETHERNET</Text>
-        <Text style={styles.title}>{favoritesOnly ? "Favorites" : "Servers"}</Text>
+        <Text maxFontSizeMultiplier={1.2} style={[styles.logo, { fontFamily: pixel }]}>
+          NETHERNET
+        </Text>
+        <Text accessibilityRole="header" maxFontSizeMultiplier={1.6} style={styles.title}>{favoritesOnly ? "Favorites" : "Servers"}</Text>
         <Text style={styles.subtitle}>Java and Bedrock, from your phone.</Text>
       </View>
 
       {note ? (
-        <View style={styles.note}>
+        <View accessibilityLiveRegion="polite" style={styles.note}>
           <Text style={styles.noteText}>{note}</Text>
         </View>
       ) : null}

@@ -19,7 +19,7 @@ export function statusLabel(status?: ServerStatus): { label: string; color: stri
 export function StatusPill({ status }: { status?: ServerStatus }) {
   const tone = statusLabel(status);
   return (
-    <View style={[styles.pill, { backgroundColor: `${tone.color}22` }]}>
+    <View accessible accessibilityLabel={tone.label} style={[styles.pill, { backgroundColor: `${tone.color}22` }]}>
       <View style={[styles.dot, { backgroundColor: tone.color }]} />
       <Text style={[styles.pillText, { color: tone.color }]}>{tone.label}</Text>
     </View>

@@ -190,7 +190,7 @@ function Step({ index, label, state, last }: { index: number; label: string; sta
   const color =
     state === "done" ? colors.online : state === "failed" ? colors.danger : state === "current" ? colors.accent : colors.tertiary;
   return (
-    <View style={styles.step}>
+        <View accessible accessibilityLabel={`${label}, ${state === "skipped" ? "skipped" : state}`} style={styles.step}>
       <View style={styles.rail}>
         <View style={[styles.dot, { borderColor: color, backgroundColor: state === "done" ? color : "transparent" }]}>
           <Text style={[styles.dotText, { color: state === "done" ? colors.accentInk : color }]}>

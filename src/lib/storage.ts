@@ -5,6 +5,7 @@ import type { AuthMode, EditionChoice, SavedServer, ServerDraft } from "./types"
 
 const SERVERS_KEY = "nethernet.servers.v1";
 const SETTINGS_KEY = "nethernet.settings.v1";
+const ONBOARDING_KEY = "nethernet.onboarding.v1";
 
 type StoreFile = {
   servers: SavedServer[];
@@ -135,4 +136,12 @@ export async function saveSettings(settings: AppSettings): Promise<void> {
     relayToken: settings.relayToken.trim(),
   };
   await AsyncStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
+}
+
+export async function hasSeenOnboarding(): Promise<boolean> {
+  return (await AsyncStorage.getItem(ONBOARDING_KEY)) === "1";
+}
+
+export async function markOnboardingSeen(): Promise<void> {
+  await AsyncStorage.setItem(ONBOARDING_KEY, "1");
 }

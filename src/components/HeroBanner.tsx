@@ -32,9 +32,17 @@ export function HeroBanner({
 
   return (
     <Animated.View entering={FadeInDown.duration(360)}>
-      <Pressable onPress={onOpen} accessibilityRole="button" accessibilityLabel={server.name} style={styles.card}>
-        <View style={styles.wash} pointerEvents="none" />
-        <Text style={[styles.kicker, { fontFamily: pixel }]}>FEATURED</Text>
+      <Pressable
+        onPress={onOpen}
+        accessibilityRole="button"
+        accessibilityLabel={`${server.name}, featured server`}
+        accessibilityHint="Opens server details"
+        style={styles.card}
+      >
+        <View style={styles.rule} pointerEvents="none" />
+        <Text maxFontSizeMultiplier={1.2} style={[styles.kicker, { fontFamily: pixel }]}>
+          FEATURED
+        </Text>
         <View style={styles.top}>
           <ServerIcon name={server.name} uri={icon} size={72} />
           <View style={styles.copy}>
@@ -67,14 +75,13 @@ const styles = StyleSheet.create({
     gap: space.md,
     overflow: "hidden",
   },
-  wash: {
+  rule: {
     position: "absolute",
-    top: -40,
-    right: -20,
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: "rgba(232,163,23,0.16)",
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 3,
+    backgroundColor: colors.accent,
   },
   kicker: {
     color: colors.accent,

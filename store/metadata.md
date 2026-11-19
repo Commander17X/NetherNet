@@ -1,6 +1,6 @@
 # NetherNet — App Store Connect metadata
 
-Use the iPhone 6.9 inch marketing screenshots in `docs/screenshots/iphone-6.9/` (1320×2868). An iPad 13 inch set is not in the repository yet.
+Use the iPhone 6.9 inch marketing screenshots in `docs/screenshots/iphone-6.9/` (1320×2868) and the iPad 13 inch set in `docs/screenshots/ipad-13/` (2064×2752).
 
 Bundle ID: `gg.nethernet.app`  
 Version: `1.0.0`  

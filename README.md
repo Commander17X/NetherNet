@@ -8,26 +8,27 @@ NetherNet does not ship a Minecraft client and does not include Mojang's assets.
 
 ## Screenshots
 
-iPhone 6.9 inch marketing images (1320×2868) live in `docs/screenshots/iphone-6.9/`:
+App Store images live in `docs/screenshots/iphone-6.9/` (1320×2868) and `docs/screenshots/ipad-13/` (2064×2752):
 
-![Server list](docs/screenshots/iphone-6.9/01-server-list.png)
-![Server detail](docs/screenshots/iphone-6.9/02-server-detail.png)
-![Add a server](docs/screenshots/iphone-6.9/03-add-server.png)
+![Lobby](docs/screenshots/iphone-6.9/01-lobby.png)
+![Scoreboard and server list](docs/screenshots/iphone-6.9/02-hud.png)
+![Server detail](docs/screenshots/iphone-6.9/03-server-detail.png)
 ![Join](docs/screenshots/iphone-6.9/04-join.png)
-![Settings](docs/screenshots/iphone-6.9/05-settings.png)
+![Add a server](docs/screenshots/iphone-6.9/05-add-server.png)
 
 Store copy is in [store/metadata.md](store/metadata.md). The public site, privacy policy, and support page are in `docs/` and publish to [commander17x.github.io/NetherNet](https://commander17x.github.io/NetherNet/).
 
 ## What you can do in the app
 
-- Trix Islands (`play.trix-islands.gg`) stays pinned at the top.
+- A lobby with a scoreboard (servers online, players, best ping), a live feed of servers coming up, going down or filling up, and Trix Islands (`play.trix-islands.gg`) pinned as the featured server.
 - Add any server as a hostname, `host:port`, or `[IPv6]:port`.
 - Pick Java, Bedrock, or Auto. Auto asks the status APIs and keeps whichever edition answers.
 - Plain domains follow Minecraft SRV records (`_minecraft._tcp` for Java, `_minecraft._udp` for Bedrock). An explicit port always wins.
-- See MOTD (legacy colors and JSON chat), player count, version, favicon, and how long the status check took.
+- See MOTD (legacy colors and JSON chat), player count, version and favicon. Server detail adds signal and room rows and a ping graph that updates every 10 seconds while open.
+- Check a server before you save it. The add form shows a live preview or tells you it got no answer.
 - Status comes from `api.mcsrvstat.us` and falls back to `api.mcstatus.io`, with a short cache and pull-to-refresh.
 - Favorite servers. The list is stored on the device.
-- Join in one tap. Bedrock opens `minecraft://?addExternalServer=...`. Java asks your relay for a session first, then opens the same kind of link pointed at the relay.
+- Join in one tap through a three-step sheet that says what failed and how to fix it. Bedrock opens `minecraft://?addExternalServer=...`. Java asks your relay for a session first, then opens the same kind of link pointed at the relay.
 
 ## Run the app
 
@@ -102,6 +103,7 @@ App tests cover address parsing, MOTD colors and JSON chat, and status decoding.
 | `src/lib` | Status lookup, storage, and the relay client |
 | `shared` | Parsers used by both the app and the relay |
 | `relay` | Geyser session service |
+| `tools/textures.py` | Draws the grass, dirt and stone textures, the block icon, the wordmark and the app icon (needs Pillow) |
 
 ## License
 

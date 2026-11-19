@@ -1,6 +1,5 @@
 import { BlurView } from "expo-blur";
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useEffect } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
@@ -8,6 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { tap } from "@/lib/haptics";
 import { colors, fillParent, space } from "@/theme";
+import { GrassGround } from "./blocks/Blocks";
 import { PixelLabel } from "./hud/PixelLabel";
 
 type TabBarProps = {
@@ -44,13 +44,11 @@ export function TabBar({ state, onSelect }: TabBarProps) {
 
   const selectorStyle = useAnimatedStyle(() => ({ transform: [{ translateX: selector.value }] }));
 
+  const bottom = Math.max(insets.bottom, space.sm);
+
   return (
-    <View pointerEvents="box-none" style={[styles.wrap, { paddingBottom: Math.max(insets.bottom, space.sm) }]}>
-      <LinearGradient
-        pointerEvents="none"
-        colors={["rgba(6,8,12,0)", "rgba(6,8,12,0.92)"]}
-        style={StyleSheet.absoluteFill}
-      />
+    <View pointerEvents="box-none" style={[styles.wrap, { paddingBottom: bottom }]}>
+      <GrassGround height={bottom + BAR_HEIGHT / 2} />
       <View accessibilityRole="tablist" style={styles.bar}>
         <BlurView intensity={40} tint="dark" style={StyleSheet.absoluteFill} />
         <View pointerEvents="none" style={styles.barTint} />
@@ -108,10 +106,10 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: SLOT_GAP,
     padding: BAR_PADDING,
-    borderRadius: 14,
+    borderRadius: 8,
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: colors.strokeStrong,
+    borderWidth: 3,
+    borderColor: colors.edge,
     shadowColor: "#000",
     shadowOpacity: 0.5,
     shadowRadius: 24,
@@ -119,7 +117,7 @@ const styles = StyleSheet.create({
   },
   barTint: {
     ...fillParent,
-    backgroundColor: "rgba(10,12,18,0.72)",
+    backgroundColor: "rgba(20,13,8,0.88)",
   },
   selector: {
     position: "absolute",
@@ -127,15 +125,15 @@ const styles = StyleSheet.create({
     left: BAR_PADDING - 3,
     width: SLOT_SIZE + 6,
     height: SLOT_SIZE + 6,
-    borderRadius: 11,
-    borderWidth: 2.5,
+    borderRadius: 6,
+    borderWidth: 3,
     borderColor: colors.accent,
-    backgroundColor: "rgba(245,178,27,0.08)",
+    backgroundColor: colors.accentSoft,
   },
   slot: {
     width: SLOT_SIZE,
     height: SLOT_SIZE,
-    borderRadius: 8,
+    borderRadius: 4,
     alignItems: "center",
     justifyContent: "center",
     gap: 3,

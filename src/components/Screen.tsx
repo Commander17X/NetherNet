@@ -1,18 +1,9 @@
-import { LinearGradient } from "expo-linear-gradient";
 import { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { colors, space, typeScale } from "@/theme";
-import { PixelLabel } from "./hud/PixelLabel";
-
-export function Wordmark({ color = colors.accent }: { color?: string }) {
-  return (
-    <PixelLabel size={11} color={color} shadow>
-      NETHERNET
-    </PixelLabel>
-  );
-}
+import { BrandMark, DirtBand } from "./blocks/Blocks";
 
 export function PageHeader({
   title,
@@ -29,7 +20,7 @@ export function PageHeader({
     <View style={styles.header}>
       {kicker || accessory ? (
         <View style={styles.kickerRow}>
-          {kicker ? <Wordmark /> : <View />}
+          {kicker ? <BrandMark height={20} /> : <View />}
           {accessory}
         </View>
       ) : null}
@@ -45,31 +36,18 @@ export function PageHeader({
   );
 }
 
-export function AmbientGlow({ height = 420 }: { height?: number }) {
-  return (
-    <LinearGradient
-      pointerEvents="none"
-      colors={["rgba(245,178,27,0.14)", "rgba(245,178,27,0.05)", "rgba(245,178,27,0)"]}
-      locations={[0, 0.45, 1]}
-      start={{ x: 0.5, y: 0 }}
-      end={{ x: 0.5, y: 1 }}
-      style={[styles.glow, { height }]}
-    />
-  );
-}
-
 export function Screen({
   children,
   bottomInset = false,
-  glow = true,
+  band = true,
 }: {
   children: ReactNode;
   bottomInset?: boolean;
-  glow?: boolean;
+  band?: boolean;
 }) {
   return (
     <View style={styles.root}>
-      {glow ? <AmbientGlow /> : null}
+      {band ? <DirtBand height={132} /> : null}
       <SafeAreaView
         style={styles.safe}
         edges={bottomInset ? ["top", "left", "right", "bottom"] : ["top", "left", "right"]}
@@ -88,12 +66,6 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
   },
-  glow: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-  },
   header: {
     gap: space.xs,
     paddingTop: space.sm,
@@ -108,6 +80,9 @@ const styles = StyleSheet.create({
   title: {
     ...typeScale.largeTitle,
     color: colors.text,
+    textShadowColor: "rgba(0,0,0,0.6)",
+    textShadowOffset: { width: 0, height: 2 },
+    textShadowRadius: 0,
   },
   subtitle: {
     ...typeScale.callout,

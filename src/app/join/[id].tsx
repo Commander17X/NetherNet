@@ -49,7 +49,7 @@ export default function JoinScreen() {
   }
 
   return (
-    <Screen bottomInset glow={false}>
+    <Screen bottomInset band={false}>
       <View style={styles.sheetTop}>
         {Platform.OS === "ios" ? null : <View style={styles.grabber} />}
         <View style={styles.close}>

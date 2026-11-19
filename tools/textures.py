@@ -5,7 +5,7 @@ same on every run. Run from the repository root:
 
     python3 tools/textures.py
 
-Needs Pillow. App textures are written at @3x for crisp tiling on iPhone. The
+Needs Pillow. App textures, plus darker dirt for header bands, are written at @3x for crisp tiling on iPhone. The
 site gets the 16x16 originals and scales them with `image-rendering: pixelated`.
 """
 
@@ -200,6 +200,8 @@ def main():
     for name, image in tiles.items():
         save(image, APP_DIR / f"{name}@3x.webp", 12)
         save(image, SITE_DIR / f"{name}.webp")
+    for name in ("dirt", "dirt-edge"):
+        save(darken(tiles[name], 0.52), APP_DIR / f"{name}-dark@3x.webp", 12)
     icon = block_icon()
     save(icon, APP_DIR / "block.webp")
     save(icon, SITE_DIR / "block.webp")

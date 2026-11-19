@@ -138,7 +138,7 @@ export function ServerListView({ favoritesOnly = false }: { favoritesOnly?: bool
   );
 
   const list = (
-    <View style={styles.column}>
+    <View style={[styles.column, empty && styles.columnFill]}>
       {!loaded ? (
         <>
           {favoritesOnly ? null : <HeroSkeleton />}
@@ -201,12 +201,14 @@ export function ServerListView({ favoritesOnly = false }: { favoritesOnly?: bool
           ) : null}
 
           {empty ? (
-            <EmptyState
-              sprite={starSprite}
-              title="No favorites yet"
-              body="Tap the star on any server and it will wait for you here."
-              action={{ label: "Browse the lobby", onPress: () => router.navigate("/") }}
-            />
+            <View style={styles.emptyCenter}>
+              <EmptyState
+                sprite={starSprite}
+                title="No favorites yet"
+                body="Tap the star on any server and it will wait for you here."
+                action={{ label: "Browse the lobby", onPress: () => router.navigate("/") }}
+              />
+            </View>
           ) : null}
         </>
       )}
@@ -297,6 +299,14 @@ const styles = StyleSheet.create({
   },
   column: {
     gap: space.lg,
+  },
+  columnFill: {
+    flex: 1,
+  },
+  emptyCenter: {
+    flex: 1,
+    justifyContent: "center",
+    paddingBottom: space.xxl,
   },
   hud: {
     gap: space.sm + space.xs,

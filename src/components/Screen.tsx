@@ -40,14 +40,16 @@ export function Screen({
   children,
   bottomInset = false,
   band = true,
+  bandHeight = 132,
 }: {
   children: ReactNode;
   bottomInset?: boolean;
   band?: boolean;
+  bandHeight?: number;
 }) {
   return (
     <View style={styles.root}>
-      {band ? <DirtBand height={132} /> : null}
+      {band ? <DirtBand height={bandHeight} /> : null}
       <SafeAreaView
         style={styles.safe}
         edges={bottomInset ? ["top", "left", "right", "bottom"] : ["top", "left", "right"]}

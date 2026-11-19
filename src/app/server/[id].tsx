@@ -164,7 +164,7 @@ export default function ServerDetailScreen() {
   ];
 
   return (
-    <Screen bottomInset>
+    <Screen bottomInset bandHeight={180}>
       <ScrollView contentContainerStyle={[styles.page, styles.content]}>
         <TopBar
           onBack={goBack}

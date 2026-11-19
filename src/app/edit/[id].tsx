@@ -51,7 +51,7 @@ export default function EditServerScreen() {
   }
 
   return (
-    <Screen bottomInset>
+    <Screen bottomInset bandHeight={164}>
       <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === "ios" ? "padding" : undefined}>
         <ScrollView
           contentContainerStyle={styles.content}

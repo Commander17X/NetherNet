@@ -40,12 +40,12 @@ export function WelcomeGuide({ onContinue }: { onContinue: () => void }) {
 
   return (
     <Screen bottomInset band={false}>
-      <DirtBand height={wide ? 400 : 330} />
+      <DirtBand height={wide ? 400 : 300} />
       <GrassGround height={insets.bottom} />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={[styles.column, wide && styles.columnWide]}>
           <Animated.View entering={FadeInDown.duration(420)} style={styles.hero}>
-            <BlockIcon size={wide ? 96 : 76} />
+            <BlockIcon size={wide ? 96 : 64} />
             <Wordmark height={26} />
             <Text
               accessibilityRole="header"
@@ -133,12 +133,12 @@ const styles = StyleSheet.create({
   hero: {
     alignItems: "center",
     gap: space.sm + space.xs,
-    marginBottom: space.xl,
+    marginBottom: space.lg,
   },
   title: {
     color: colors.text,
-    fontSize: 38,
-    lineHeight: 44,
+    fontSize: 34,
+    lineHeight: 40,
     fontWeight: "800",
     letterSpacing: -1.4,
     textAlign: "center",

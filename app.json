@@ -33,7 +33,7 @@
     "android": {
       "package": "gg.nethernet.app",
       "adaptiveIcon": {
-        "backgroundColor": "#090B10",
+        "backgroundColor": "#120D09",
         "foregroundImage": "./assets/images/icon.png"
       }
     },
@@ -47,7 +47,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#090B10",
+          "backgroundColor": "#120D09",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 240
         }

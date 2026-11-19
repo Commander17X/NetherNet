@@ -36,17 +36,17 @@ export default function RootLayout() {
           }}
         >
           <Stack.Screen name="(tabs)" />
-          <Stack.Screen name="server/[id]" />
+          <Stack.Screen name="server/[id]" options={{ animation: "default" }} />
           <Stack.Screen
             name="join/[id]"
             options={{
               presentation: "formSheet",
               sheetGrabberVisible: true,
-              sheetAllowedDetents: [0.72, 1],
+              sheetAllowedDetents: [0.86, 1],
               contentStyle: { backgroundColor: colors.bg },
             }}
           />
-          <Stack.Screen name="edit/[id]" />
+          <Stack.Screen name="edit/[id]" options={{ animation: "default" }} />
           <Stack.Screen name="welcome" options={{ presentation: "modal" }} />
         </Stack>
       </FontReadyContext.Provider>

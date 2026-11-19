@@ -23,10 +23,7 @@ export type FeedItem = {
 const SPIKE_MIN_PLAYERS = 5;
 const SPIKE_MIN_RATIO = 0.15;
 
-export function summarizeLobby(
-  entries: ServerEntry[],
-  statuses: Record<string, ServerStatus | undefined>,
-): LobbyStats {
+export function summarizeLobby(entries: ServerEntry[], statuses: Record<string, ServerStatus | undefined>): LobbyStats {
   let onlineCount = 0;
   let checkedCount = 0;
   let players = 0;

@@ -1,40 +1,59 @@
 import { useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useState } from "react";
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
+import { useCallback, useRef, useState } from "react";
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import { buildCatalog, groupServers } from "@/lib/catalog";
 import { friendlyError } from "@/lib/errors";
+import { FEATURED_SERVER } from "@/lib/featured";
+import { feedForChange, pushFeed, summarizeLobby, type FeedItem } from "@/lib/lobby";
+import { recordPing } from "@/lib/pingHistory";
 import { RelayClient } from "@/lib/relayClient";
 import { lookupStatus, type ServerStatus } from "@/lib/statusService";
 import { loadServerFile, loadSettings, toggleFavoriteId } from "@/lib/storage";
 import type { ServerEntry } from "@/lib/types";
-import { colors, space } from "@/theme";
-import { Wordmark } from "./Screen";
-import { CardSkeleton } from "./Skeleton";
-import { useTabContentInset } from "./TabBar";
+import { colors, radius, space } from "@/theme";
 import { EmptyState, SectionTitle } from "./EmptyState";
 import { HeroBanner } from "./HeroBanner";
+import { ChatFeed } from "./hud/ChatFeed";
+import { PixelLabel } from "./hud/PixelLabel";
+import { PixelSprite } from "./hud/PixelSprite";
+import { Scoreboard } from "./hud/Scoreboard";
+import { plusSprite, starSprite } from "./hud/sprites";
+import { PageHeader } from "./Screen";
 import { ServerCard } from "./ServerCard";
+import { CardSkeleton, HeroSkeleton } from "./Skeleton";
+import { useTabContentInset } from "./TabBar";
+
+const REFRESH_MS = 30_000;
+const WIDE_LAYOUT = 900;
 
 export function ServerListView({ favoritesOnly = false }: { favoritesOnly?: boolean }) {
   const router = useRouter();
   const tabInset = useTabContentInset();
+  const { width } = useWindowDimensions();
+  const wide = !favoritesOnly && width >= WIDE_LAYOUT;
   const [entries, setEntries] = useState<ServerEntry[]>([]);
   const [statuses, setStatuses] = useState<Record<string, ServerStatus | undefined>>({});
+  const [feed, setFeed] = useState<FeedItem[]>([]);
   const [refreshing, setRefreshing] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [note, setNote] = useState<string | null>(null);
+  const lastSeen = useRef<Record<string, ServerStatus | undefined>>({});
 
   const pingAll = useCallback(async (catalog: ServerEntry[], fresh: boolean) => {
     await Promise.all(
       catalog.map(async (server) => {
-        const status = await lookupStatus({
-          host: server.host,
-          port: server.port,
-          edition: server.edition,
-          fresh,
-        });
+        const status = await lookupStatus({ host: server.host, port: server.port, edition: server.edition, fresh });
+        const before = lastSeen.current[server.id];
+        lastSeen.current[server.id] = status;
         setStatuses((current) => ({ ...current, [server.id]: status }));
+        if (status.online && status.checkedAt !== before?.checkedAt) {
+          void recordPing(server.id, status.pingMs);
+        }
+        const item = feedForChange(server, before, status);
+        if (item) {
+          setFeed((current) => pushFeed(current, item));
+        }
       }),
     );
   }, []);
@@ -48,16 +67,12 @@ export function ServerListView({ favoritesOnly = false }: { favoritesOnly?: bool
           publicServers = await new RelayClient(settings.relayUrl, settings.relayToken).listPublicServers();
           setNote(null);
         } catch (error) {
-          setNote(friendlyError(error));
+          setNote(friendlyError(error, "The relay didn't answer, so popular servers are hidden."));
         }
       } else {
         setNote(null);
       }
-      const catalog = buildCatalog({
-        saved: file.servers,
-        favoriteIds: file.favoriteIds,
-        publicServers,
-      });
+      const catalog = buildCatalog({ saved: file.servers, favoriteIds: file.favoriteIds, publicServers });
       setEntries(catalog);
       setLoaded(true);
       await pingAll(catalog, fresh);
@@ -68,10 +83,14 @@ export function ServerListView({ favoritesOnly = false }: { favoritesOnly?: bool
   useFocusEffect(
     useCallback(() => {
       void load(false);
+      const timer = setInterval(() => void load(true), REFRESH_MS);
+      return () => clearInterval(timer);
     }, [load]),
   );
 
   const groups = groupServers(entries, favoritesOnly);
+  const stats = summarizeLobby(entries, statuses);
+  const favoriteCount = entries.filter((server) => server.favorite).length;
 
   function openServer(server: ServerEntry) {
     router.push(`/server/${encodeURIComponent(server.id)}`);
@@ -87,17 +106,120 @@ export function ServerListView({ favoritesOnly = false }: { favoritesOnly?: bool
   }
 
   const sections = [
-    groups.favorites.length > 0 ? { title: "Favorites", servers: groups.favorites } : null,
+    groups.favorites.length > 0 ? { title: favoritesOnly ? "Starred" : "Favorites", servers: groups.favorites } : null,
     !favoritesOnly && groups.saved.length > 0 ? { title: "Your servers", servers: groups.saved } : null,
     !favoritesOnly && groups.publicServers.length > 0 ? { title: "Popular", servers: groups.publicServers } : null,
   ].filter((section): section is { title: string; servers: ServerEntry[] } => section !== null);
+
+  const empty = favoritesOnly && loaded && sections.length === 0 && !groups.featured;
+
+  const header = favoritesOnly ? (
+    <PageHeader title="Favorites" subtitle="Your starred servers, ready to join." />
+  ) : (
+    <PageHeader
+      title="Lobby"
+      subtitle="Java and Bedrock servers, live."
+      accessory={
+        <View style={styles.live} accessible accessibilityLabel="Live, refreshes every 30 seconds">
+          <View style={styles.liveDot} />
+          <PixelLabel size={7} color={colors.online}>
+            LIVE
+          </PixelLabel>
+        </View>
+      }
+    />
+  );
+
+  const hud = favoritesOnly ? null : (
+    <View style={styles.hud}>
+      <ChatFeed items={feed} waiting={stats.checkedCount === 0} />
+      <Scoreboard stats={stats} favorites={favoriteCount} footer={FEATURED_SERVER.host} />
+    </View>
+  );
+
+  const list = (
+    <View style={styles.column}>
+      {!loaded ? (
+        <>
+          {favoritesOnly ? null : <HeroSkeleton />}
+          <CardSkeleton />
+          <CardSkeleton />
+        </>
+      ) : (
+        <>
+          {groups.featured ? (
+            <HeroBanner
+              server={groups.featured}
+              status={statuses[groups.featured.id]}
+              onOpen={() => openServer(groups.featured!)}
+              onJoin={() => joinServer(groups.featured!)}
+            />
+          ) : null}
+
+          {!wide ? hud : null}
+
+          {sections.map((section) => (
+            <View key={section.title} style={styles.section}>
+              <SectionTitle trailing={<Text style={styles.sectionCount}>{section.servers.length}</Text>}>
+                {section.title}
+              </SectionTitle>
+              {section.servers.map((server, index) => (
+                <ServerCard
+                  key={server.id}
+                  server={server}
+                  status={statuses[server.id]}
+                  index={index}
+                  onOpen={() => openServer(server)}
+                  onJoin={() => joinServer(server)}
+                  onFavorite={() => void favorite(server)}
+                />
+              ))}
+            </View>
+          ))}
+
+          {!favoritesOnly && groups.saved.length === 0 ? (
+            <View style={styles.section}>
+              <SectionTitle>Your servers</SectionTitle>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Add your first server"
+                accessibilityHint="Opens the add server screen"
+                onPress={() => router.push("/add")}
+                style={({ pressed }) => [styles.emptySlot, pressed && styles.emptySlotPressed]}
+              >
+                <View style={styles.emptyIcon}>
+                  <PixelSprite sprite={plusSprite} pixel={3} />
+                </View>
+                <View style={styles.emptyCopy}>
+                  <Text style={styles.emptyTitle}>Add your first server</Text>
+                  <Text style={styles.emptyBody}>
+                    Any Java or Bedrock address. Custom ports and plain domains work too.
+                  </Text>
+                </View>
+              </Pressable>
+            </View>
+          ) : null}
+
+          {empty ? (
+            <EmptyState
+              sprite={starSprite}
+              title="No favorites yet"
+              body="Tap the star on any server and it will wait for you here."
+              action={{ label: "Browse the lobby", onPress: () => router.navigate("/") }}
+            />
+          ) : null}
+        </>
+      )}
+    </View>
+  );
 
   return (
     <ScrollView
       contentContainerStyle={[
         styles.scroll,
+        wide && styles.scrollWide,
         { paddingBottom: tabInset },
-        favoritesOnly && sections.length === 0 && !groups.featured ? styles.scrollFill : null,
+        empty && styles.scrollFill,
       ]}
       refreshControl={
         <RefreshControl
@@ -110,11 +232,7 @@ export function ServerListView({ favoritesOnly = false }: { favoritesOnly?: bool
         />
       }
     >
-      <View style={styles.header}>
-        <Wordmark />
-        <Text accessibilityRole="header" maxFontSizeMultiplier={1.6} style={styles.title}>{favoritesOnly ? "Favorites" : "Servers"}</Text>
-        <Text style={styles.subtitle}>Java and Bedrock, from your phone.</Text>
-      </View>
+      {header}
 
       {note ? (
         <View accessibilityLiveRegion="polite" style={styles.note}>
@@ -122,79 +240,13 @@ export function ServerListView({ favoritesOnly = false }: { favoritesOnly?: bool
         </View>
       ) : null}
 
-      {!loaded ? (
-        <View style={styles.stack}>
-          <CardSkeleton />
-          <CardSkeleton />
-          <CardSkeleton />
+      {wide ? (
+        <View style={styles.wideRow}>
+          <View style={styles.wideMain}>{list}</View>
+          <View style={styles.wideSide}>{hud}</View>
         </View>
       ) : (
-        <>
-          {!favoritesOnly && groups.featured ? (
-            <HeroBanner
-              server={groups.featured}
-              status={statuses[groups.featured.id]}
-              onOpen={() => openServer(groups.featured!)}
-              onJoin={() => joinServer(groups.featured!)}
-            />
-          ) : null}
-          {favoritesOnly && groups.featured ? (
-            <HeroBanner
-              server={groups.featured}
-              status={statuses[groups.featured.id]}
-              onOpen={() => openServer(groups.featured!)}
-              onJoin={() => joinServer(groups.featured!)}
-            />
-          ) : null}
-
-          {!favoritesOnly && loaded && groups.saved.length === 0 ? (
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel="Add your first server"
-              onPress={() => router.push("/add")}
-              style={styles.addCard}
-            >
-              <Text style={styles.addTitle}>Add your first server</Text>
-              <Text style={styles.addBody}>A hostname, a port, or an IPv6 address.</Text>
-            </Pressable>
-          ) : null}
-
-          {sections.length === 0 && favoritesOnly && !groups.featured ? (
-            <EmptyState
-              icon="star-outline"
-              title="Nothing starred yet"
-              body="Tap the star on a server and it will wait for you here."
-              action={{ label: "Browse servers", onPress: () => router.push("/") }}
-            />
-          ) : null}
-          {sections.length === 0 && !favoritesOnly && !groups.featured ? (
-            <EmptyState
-              icon="add-circle-outline"
-              title="No servers yet"
-              body="Add a hostname, a port, or an IPv6 address."
-              action={{ label: "Add a server", onPress: () => router.push("/add") }}
-            />
-          ) : null}
-
-          {sections.map((section) => (
-            <View key={section.title}>
-              <SectionTitle>{section.title}</SectionTitle>
-              <View style={styles.stack}>
-                {section.servers.map((server, index) => (
-                  <ServerCard
-                    key={server.id}
-                    server={server}
-                    status={statuses[server.id]}
-                    index={index}
-                    onOpen={() => openServer(server)}
-                    onJoin={() => joinServer(server)}
-                    onFavorite={() => void favorite(server)}
-                  />
-                ))}
-              </View>
-            </View>
-          ))}
-        </>
+        list
       )}
     </ScrollView>
   );
@@ -203,34 +255,39 @@ export function ServerListView({ favoritesOnly = false }: { favoritesOnly?: bool
 const styles = StyleSheet.create({
   scroll: {
     paddingHorizontal: space.md,
-    gap: space.md,
-    maxWidth: 680,
+    gap: space.lg,
+    maxWidth: 720,
     width: "100%",
     alignSelf: "center",
   },
+  scrollWide: {
+    maxWidth: 1080,
+    paddingHorizontal: space.xl,
+  },
   scrollFill: {
     flexGrow: 1,
-    justifyContent: "center",
   },
-  header: {
-    paddingTop: space.sm,
-    gap: 4,
+  live: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: space.xs + 2,
+    paddingHorizontal: space.sm,
+    paddingVertical: space.xs,
+    borderRadius: radius.pixel,
+    backgroundColor: "rgba(67,224,140,0.1)",
+    borderWidth: 1,
+    borderColor: "rgba(67,224,140,0.3)",
   },
-  title: {
-    color: colors.text,
-    fontSize: 34,
-    lineHeight: 40,
-    fontWeight: "700",
-    letterSpacing: -0.8,
-  },
-  subtitle: {
-    color: colors.secondary,
-    fontSize: 16,
-    lineHeight: 22,
+  liveDot: {
+    width: 6,
+    height: 6,
+    backgroundColor: colors.online,
   },
   note: {
-    backgroundColor: "rgba(232,163,23,0.12)",
-    borderRadius: 14,
+    backgroundColor: colors.accentSoft,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    borderColor: "rgba(245,178,27,0.3)",
     padding: space.md,
   },
   noteText: {
@@ -238,25 +295,69 @@ const styles = StyleSheet.create({
     fontSize: 15,
     lineHeight: 20,
   },
-  stack: {
-    gap: space.sm + 4,
+  column: {
+    gap: space.lg,
   },
-  addCard: {
+  hud: {
+    gap: space.sm + space.xs,
+  },
+  section: {
+    gap: space.sm + space.xs,
+  },
+  sectionCount: {
+    color: colors.tertiary,
+    fontSize: 12,
+    fontWeight: "700",
+    fontVariant: ["tabular-nums"],
+  },
+  wideRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: space.lg,
+  },
+  wideMain: {
+    flex: 1,
+  },
+  wideSide: {
+    width: 320,
+  },
+  emptySlot: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: space.md,
+    padding: space.md,
+    borderRadius: radius.lg,
+    borderWidth: 1.5,
+    borderStyle: "dashed",
+    borderColor: colors.strokeStrong,
+    backgroundColor: "rgba(255,255,255,0.02)",
+  },
+  emptySlotPressed: {
     backgroundColor: colors.fill,
-    borderRadius: 20,
-    borderWidth: 1,
-    borderColor: colors.stroke,
-    padding: space.lg,
-    gap: 4,
   },
-  addTitle: {
+  emptyIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: 9,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(124,240,58,0.08)",
+    borderWidth: 1,
+    borderColor: "rgba(124,240,58,0.25)",
+  },
+  emptyCopy: {
+    flex: 1,
+    gap: space.xs,
+  },
+  emptyTitle: {
     color: colors.text,
     fontSize: 17,
     fontWeight: "700",
+    letterSpacing: -0.3,
   },
-  addBody: {
+  emptyBody: {
     color: colors.secondary,
-    fontSize: 15,
-    lineHeight: 21,
+    fontSize: 14,
+    lineHeight: 19,
   },
 });

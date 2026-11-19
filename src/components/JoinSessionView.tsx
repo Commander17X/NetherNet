@@ -1,4 +1,5 @@
 import * as Linking from "expo-linking";
+import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 
@@ -36,6 +37,8 @@ function statesFor(phase: Phase, via: "relay" | "direct" | null): StepState[] {
 }
 
 export function JoinSessionView({ server }: { server: ServerEntry }) {
+  const router = useRouter();
+  const [attempt, setAttempt] = useState(0);
   const [phase, setPhase] = useState<Phase>("checking");
   const [message, setMessage] = useState("Looking up the server.");
   const [status, setStatus] = useState<ServerStatus | null>(null);
@@ -53,6 +56,9 @@ export function JoinSessionView({ server }: { server: ServerEntry }) {
     let cancelled = false;
 
     async function run() {
+      setPhase("checking");
+      setMessage("Looking up the server.");
+      setInstallHelp(false);
       const lookedUp = await lookupStatus({
         host: server.host,
         port: server.port,
@@ -126,7 +132,7 @@ export function JoinSessionView({ server }: { server: ServerEntry }) {
     return () => {
       cancelled = true;
     };
-  }, [server.authMode, server.edition, server.host, server.name, server.port]);
+  }, [attempt, server.authMode, server.edition, server.host, server.name, server.port]);
 
   async function openMinecraft() {
     if (!target) {
@@ -166,9 +172,7 @@ export function JoinSessionView({ server }: { server: ServerEntry }) {
 
       <Text style={styles.message}>{message}</Text>
       {target?.via === "relay" && server.authMode === "online" ? (
-        <Text style={styles.help}>
-          Online Java servers ask for a Microsoft login the first time. NetherNet does not use Floodgate.
-        </Text>
+        <Text style={styles.help}>The first time you join an online Java server, Bedrock may ask you to sign in with Microsoft.</Text>
       ) : null}
       {installHelp ? (
         <Text style={styles.help}>
@@ -176,12 +180,19 @@ export function JoinSessionView({ server }: { server: ServerEntry }) {
         </Text>
       ) : null}
 
-      <AppButton
-        label={phase === "ready" ? "Open Minecraft" : phase === "failed" ? "Not ready" : "Starting"}
-        variant={phase === "ready" ? "primary" : "secondary"}
-        disabled={phase !== "ready"}
-        onPress={() => void openMinecraft()}
-      />
+      {phase === "failed" ? (
+        <View style={styles.actions}>
+          <AppButton label="Try again" onPress={() => setAttempt((value) => value + 1)} />
+          <AppButton label="Open Settings" variant="secondary" onPress={() => router.push("/settings")} />
+        </View>
+      ) : (
+        <AppButton
+          label={phase === "ready" ? "Open Minecraft" : "Starting"}
+          variant={phase === "ready" ? "primary" : "secondary"}
+          disabled={phase !== "ready"}
+          onPress={() => void openMinecraft()}
+        />
+      )}
     </View>
   );
 }
@@ -298,5 +309,8 @@ const styles = StyleSheet.create({
     color: colors.tertiary,
     fontSize: 13,
     lineHeight: 18,
+  },
+  actions: {
+    gap: space.sm,
   },
 });

@@ -30,25 +30,28 @@ export function ServerCard({
 
   return (
     <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 40).duration(320)}>
-      <Pressable
-        onPress={onOpen}
-        accessibilityRole="button"
-        accessibilityLabel={server.name}
-        accessibilityHint="Opens server details"
-        style={styles.card}
-      >
+      <View style={styles.card}>
         <View style={styles.top}>
-          <ServerIcon name={server.name} uri={icon} />
-          <View style={styles.copy}>
-            <Text style={styles.name} numberOfLines={1}>
-              {server.name}
-            </Text>
-            <Text style={styles.address} numberOfLines={1}>
-              {address}
-            </Text>
-          </View>
+          <Pressable
+            onPress={onOpen}
+            accessibilityRole="button"
+            accessibilityLabel={server.name}
+            accessibilityHint="Opens server details"
+            style={styles.main}
+          >
+            <ServerIcon name={server.name} uri={icon} />
+            <View style={styles.copy}>
+              <Text style={styles.name} numberOfLines={1}>
+                {server.name}
+              </Text>
+              <Text style={styles.address} numberOfLines={1}>
+                {address}
+              </Text>
+            </View>
+          </Pressable>
           <Pressable
             hitSlop={8}
+            accessibilityRole="button"
             accessibilityLabel={server.favorite ? "Remove favorite" : "Favorite"}
             onPress={() => {
               tap("light");
@@ -58,8 +61,12 @@ export function ServerCard({
             <Ionicons name={server.favorite ? "star" : "star-outline"} size={22} color={server.favorite ? colors.accent : colors.tertiary} />
           </Pressable>
         </View>
-        {status ? <MotdText lines={status.motd} dim={!status.online} linesToShow={2} /> : <Text style={styles.waiting}>Checking</Text>}
-        <ServerMeta status={status} players />
+        <Pressable onPress={onOpen} accessibilityRole="button" accessibilityLabel={`${server.name} details`}>
+          {status ? <MotdText lines={status.motd} dim={!status.online} linesToShow={2} /> : <Text style={styles.waiting}>Checking</Text>}
+          <View style={styles.meta}>
+            <ServerMeta status={status} players />
+          </View>
+        </Pressable>
         <Pressable
           onPress={() => {
             tap("medium");
@@ -72,7 +79,7 @@ export function ServerCard({
           <Text style={styles.joinLabel}>Join</Text>
           <Ionicons name="chevron-forward" size={16} color={colors.accentInk} />
         </Pressable>
-      </Pressable>
+      </View>
     </Animated.View>
   );
 }
@@ -87,6 +94,12 @@ const styles = StyleSheet.create({
     gap: space.sm + 4,
   },
   top: {
+    flexDirection: "row",
+    gap: space.sm,
+    alignItems: "center",
+  },
+  main: {
+    flex: 1,
     flexDirection: "row",
     gap: space.sm + 4,
     alignItems: "center",
@@ -108,6 +121,9 @@ const styles = StyleSheet.create({
   waiting: {
     color: colors.tertiary,
     fontSize: 15,
+  },
+  meta: {
+    marginTop: space.sm,
   },
   join: {
     alignSelf: "flex-start",

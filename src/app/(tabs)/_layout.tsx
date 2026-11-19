@@ -1,21 +1,32 @@
-import { Tabs, useRouter } from "expo-router";
-import { useEffect, useRef } from "react";
+import { Tabs } from "expo-router";
+import { useEffect, useState } from "react";
+import { View } from "react-native";
 
 import { TabBar } from "@/components/TabBar";
-import { hasSeenOnboarding } from "@/lib/storage";
+import { WelcomeGuide } from "@/app/welcome";
+import { hasSeenOnboarding, markOnboardingSeen } from "@/lib/storage";
+import { colors } from "@/theme";
 
 export default function TabLayout() {
-  const router = useRouter();
-  const asked = useRef(false);
+  const [gate, setGate] = useState<"loading" | "welcome" | "app">("loading");
 
   useEffect(() => {
-    void hasSeenOnboarding().then((seen) => {
-      if (!seen && !asked.current) {
-        asked.current = true;
-        router.push("/welcome");
-      }
-    });
-  }, [router]);
+    void hasSeenOnboarding().then((seen) => setGate(seen ? "app" : "welcome"));
+  }, []);
+
+  if (gate === "loading") {
+    return <View style={{ flex: 1, backgroundColor: colors.bg }} />;
+  }
+
+  if (gate === "welcome") {
+    return (
+      <WelcomeGuide
+        onContinue={() => {
+          void markOnboardingSeen().then(() => setGate("app"));
+        }}
+      />
+    );
+  }
 
   return (
     <Tabs

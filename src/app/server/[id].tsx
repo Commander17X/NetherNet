@@ -1,19 +1,21 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
+import { Alert, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { AppButton } from "@/components/AppButton";
+import { EmptyState } from "@/components/EmptyState";
 import { MotdText } from "@/components/MotdText";
 import { PageHeader, Screen } from "@/components/Screen";
 import { ServerIcon, useServerFavicon } from "@/components/ServerIcon";
 import { ServerMeta } from "@/components/ServerMeta";
+import { CardSkeleton } from "@/components/Skeleton";
 import { findServer } from "@/lib/findServer";
 import { formatAddress } from "@/lib/address";
 import { lookupStatus, type ServerStatus } from "@/lib/statusService";
 import { removeSavedServer, toggleFavoriteId } from "@/lib/storage";
 import type { ServerEntry } from "@/lib/types";
 import { colors, radius, space } from "@/theme";
-import { CardSkeleton } from "@/components/Skeleton";
 
 function readId(value: string | string[] | undefined): string {
   const raw = Array.isArray(value) ? value[0] : value;
@@ -58,9 +60,13 @@ export default function ServerDetailScreen() {
   if (missing) {
     return (
       <Screen bottomInset>
-        <View style={styles.content}>
-          <PageHeader title="Missing server" />
-          <AppButton label="Back" variant="secondary" onPress={() => router.back()} />
+        <View style={styles.missing}>
+          <EmptyState
+            icon="help-circle-outline"
+            title="Server not found"
+            body="This server is not on the device anymore. It may have been removed, or the link is out of date."
+            action={{ label: "Back to servers", onPress: () => router.replace("/") }}
+          />
         </View>
       </Screen>
     );
@@ -78,17 +84,24 @@ export default function ServerDetailScreen() {
 
   const typedAddress = server.port == null ? server.host : formatAddress(server.host, server.port);
   const liveAddress = status ? `${status.connectHost}:${status.connectPort}` : typedAddress;
-  const edition = server.edition === "auto" ? status?.edition ?? "auto" : server.edition;
+  const edition = server.edition === "auto" ? (status?.edition ?? "auto") : server.edition;
+  const editionName = edition === "java" ? "Java" : edition === "bedrock" ? "Bedrock" : "Auto";
+  const kind =
+    server.source === "featured" ? "Featured" : server.source === "public" ? "Popular" : typedAddress;
 
   return (
     <Screen bottomInset>
       <ScrollView contentContainerStyle={styles.content}>
+        <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()} style={styles.back}>
+          <Ionicons name="chevron-back" size={22} color={colors.accent} />
+          <Text style={styles.backLabel}>Servers</Text>
+        </Pressable>
         <PageHeader title={server.name} subtitle={liveAddress} />
         <View style={styles.card}>
           <ServerIcon name={server.name} uri={icon} size={84} />
           {status ? <MotdText lines={status.motd} dim={!status.online} linesToShow={3} /> : <Text style={styles.waiting}>Checking the server</Text>}
           <ServerMeta status={status ?? undefined} players />
-          <Text style={styles.meta}>{`${edition} · saved as ${typedAddress}`}</Text>
+          <Text style={styles.meta}>{`${editionName} · ${kind}`}</Text>
           {status?.version ? <Text style={styles.meta}>{status.version}</Text> : null}
           {status?.gameMode ? <Text style={styles.meta}>{status.gameMode}</Text> : null}
           {server.description ? <Text style={styles.meta}>{server.description}</Text> : null}
@@ -141,6 +154,22 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.md,
     paddingBottom: space.xl,
     gap: space.md,
+  },
+  missing: {
+    flex: 1,
+    justifyContent: "center",
+  },
+  back: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
+    alignSelf: "flex-start",
+    minHeight: 44,
+  },
+  backLabel: {
+    color: colors.accent,
+    fontSize: 17,
+    fontWeight: "600",
   },
   card: {
     backgroundColor: colors.card,

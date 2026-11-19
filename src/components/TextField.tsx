@@ -13,7 +13,7 @@ export function TextField({
       <Text style={styles.label}>{label}</Text>
       <TextInput
         accessibilityLabel={label}
-        placeholderTextColor={colors.tertiary}
+        placeholderTextColor={colors.placeholder}
         {...input}
         style={[styles.input, error ? styles.inputError : null, input.style]}
       />

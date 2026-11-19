@@ -1,3 +1,5 @@
+import { friendlyError } from "./errors";
+
 export type RelayHealth = {
   ok: boolean;
   geyser: "ready" | "missing";
@@ -60,8 +62,7 @@ export class RelayClient {
         signal: init?.signal ?? AbortSignal.timeout(15000),
       });
     } catch (error) {
-      const message = error instanceof Error ? error.message : "The relay didn't respond.";
-      throw new RelayError(message);
+      throw new RelayError(friendlyError(error));
     }
 
     const text = await response.text();

@@ -18,6 +18,11 @@ const ITEMS: Record<string, { label: string; icon: keyof typeof Ionicons.glyphMa
   settings: { label: "Settings", icon: "settings-outline", active: "settings" },
 };
 
+export function useTabContentInset(): number {
+  const insets = useSafeAreaInsets();
+  return 16 + 56 + Math.max(insets.bottom, 8);
+}
+
 export function TabBar({ state, onSelect }: TabBarProps) {
   const insets = useSafeAreaInsets();
 

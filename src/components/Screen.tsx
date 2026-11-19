@@ -4,13 +4,19 @@ import { SafeAreaView } from "react-native-safe-area-context";
 
 import { colors, space, usePixelFont } from "@/theme";
 
-export function PageHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+export function Wordmark() {
   const pixel = usePixelFont();
   return (
+    <Text maxFontSizeMultiplier={1.3} style={[styles.logo, { fontFamily: pixel }]}>
+      NETHERNET
+    </Text>
+  );
+}
+
+export function PageHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+  return (
     <View style={styles.header}>
-      <Text maxFontSizeMultiplier={1.2} style={[styles.logo, { fontFamily: pixel }]}>
-        NETHERNET
-      </Text>
+      <Wordmark />
       <Text accessibilityRole="header" maxFontSizeMultiplier={1.6} style={styles.title}>
         {title}
       </Text>
@@ -43,8 +49,8 @@ const styles = StyleSheet.create({
   },
   logo: {
     color: colors.accent,
-    fontSize: 10,
-    lineHeight: 16,
+    fontSize: 13,
+    lineHeight: 22,
   },
   title: {
     color: colors.text,

@@ -1,29 +1,70 @@
+import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { useRouter } from "expo-router";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 
 import { AppButton } from "@/components/AppButton";
-import { Screen } from "@/components/Screen";
+import { Screen, Wordmark } from "@/components/Screen";
 import { markOnboardingSeen } from "@/lib/storage";
-import { colors, radius, space, usePixelFont } from "@/theme";
+import { colors, radius, space } from "@/theme";
 
-const STEPS = [
+const STEPS: { title: string; body: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   {
-    title: "You need the Bedrock app",
-    body: "NetherNet is a server list, not the game. Join opens the official Bedrock app, which has the touch controls.",
+    icon: "phone-portrait-outline",
+    title: "Play happens in Bedrock",
+    body: "NetherNet is the list. The official Bedrock app is where you play, with the touch controls you already know.",
   },
   {
-    title: "Bedrock joins directly",
-    body: "Add a hostname or a custom port. A plain domain uses the usual Bedrock port unless you type one.",
+    icon: "globe-outline",
+    title: "Bedrock servers open directly",
+    body: "Add a domain, or a domain and a port. One tap hands that address to Bedrock.",
   },
   {
-    title: "Java needs a relay you host",
-    body: "The relay starts a short Geyser session, then the same Bedrock link points at it. Set the relay address in Settings before you join a Java server.",
+    icon: "git-network-outline",
+    title: "Java servers use your relay",
+    body: "Run the small relay from this project, then paste its address in Settings. NetherNet asks it for a short session and opens Bedrock pointed there.",
   },
 ];
 
+export function WelcomeGuide({ onContinue }: { onContinue: () => void }) {
+  const width = useWindowDimensions().width;
+  const wide = width >= 700;
+
+  return (
+    <Screen bottomInset>
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={[styles.column, wide && styles.columnWide]}>
+          <Image source={require("../../assets/images/icon.png")} style={styles.icon} accessibilityLabel="NetherNet app icon" />
+          <Wordmark />
+          <Text accessibilityRole="header" maxFontSizeMultiplier={1.6} style={styles.title}>
+            Welcome
+          </Text>
+          <Text style={styles.lead}>A server list for your phone. The game stays in Bedrock.</Text>
+          <View style={[styles.list, wide && styles.listWide]}>
+            {STEPS.map((step, index) => (
+              <View
+                key={step.title}
+                accessible
+                accessibilityLabel={`${index + 1}. ${step.title}. ${step.body}`}
+                style={[styles.card, wide && styles.cardWide]}
+              >
+                <View style={styles.badge}>
+                  <Ionicons name={step.icon} size={22} color={colors.accent} />
+                </View>
+                <Text style={styles.cardTitle}>{step.title}</Text>
+                <Text style={styles.cardBody}>{step.body}</Text>
+              </View>
+            ))}
+          </View>
+          <AppButton label="Continue" onPress={onContinue} />
+        </View>
+      </ScrollView>
+    </Screen>
+  );
+}
+
 export default function WelcomeScreen() {
   const router = useRouter();
-  const pixel = usePixelFont();
 
   async function finish() {
     await markOnboardingSeen();
@@ -34,43 +75,27 @@ export default function WelcomeScreen() {
     router.replace("/");
   }
 
-  return (
-    <Screen bottomInset>
-      <ScrollView contentContainerStyle={styles.content}>
-        <Text maxFontSizeMultiplier={1.2} style={[styles.logo, { fontFamily: pixel }]}>
-          NETHERNET
-        </Text>
-        <Text accessibilityRole="header" maxFontSizeMultiplier={1.6} style={styles.title}>
-          Before you join
-        </Text>
-        <Text style={styles.lead}>Three things, then the server list.</Text>
-        <View style={styles.list}>
-          {STEPS.map((step, index) => (
-            <View key={step.title} accessible accessibilityLabel={`${index + 1}. ${step.title}. ${step.body}`} style={styles.card}>
-              <Text style={styles.index}>{index + 1}</Text>
-              <View style={styles.copy}>
-                <Text style={styles.cardTitle}>{step.title}</Text>
-                <Text style={styles.cardBody}>{step.body}</Text>
-              </View>
-            </View>
-          ))}
-        </View>
-        <AppButton label="Continue" onPress={() => void finish()} />
-      </ScrollView>
-    </Screen>
-  );
+  return <WelcomeGuide onContinue={() => void finish()} />;
 }
 
 const styles = StyleSheet.create({
   content: {
     padding: space.lg,
-    gap: space.md,
     paddingBottom: space.xl,
   },
-  logo: {
-    color: colors.accent,
-    fontSize: 10,
-    lineHeight: 16,
+  column: {
+    width: "100%",
+    maxWidth: 880,
+    alignSelf: "center",
+    gap: space.md,
+  },
+  columnWide: {
+    paddingTop: space.lg,
+  },
+  icon: {
+    width: 88,
+    height: 88,
+    borderRadius: 22,
   },
   title: {
     color: colors.text,
@@ -88,24 +113,27 @@ const styles = StyleSheet.create({
     gap: space.sm + 4,
     marginVertical: space.sm,
   },
-  card: {
+  listWide: {
     flexDirection: "row",
-    gap: space.md,
+  },
+  card: {
     backgroundColor: colors.card,
     borderRadius: radius.lg,
     borderWidth: 1,
     borderColor: colors.stroke,
     padding: space.md,
+    gap: space.sm,
   },
-  index: {
-    color: colors.accent,
-    fontSize: 20,
-    fontWeight: "700",
-    width: 24,
-  },
-  copy: {
+  cardWide: {
     flex: 1,
-    gap: 4,
+  },
+  badge: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: colors.fill,
+    alignItems: "center",
+    justifyContent: "center",
   },
   cardTitle: {
     color: colors.text,

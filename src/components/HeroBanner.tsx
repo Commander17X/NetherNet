@@ -32,35 +32,36 @@ export function HeroBanner({
 
   return (
     <Animated.View entering={FadeInDown.duration(360)}>
-      <Pressable
-        onPress={onOpen}
-        accessibilityRole="button"
-        accessibilityLabel={`${server.name}, featured server`}
-        accessibilityHint="Opens server details"
-        style={styles.card}
-      >
+      <View style={styles.card}>
         <View style={styles.rule} pointerEvents="none" />
-        <Text maxFontSizeMultiplier={1.2} style={[styles.kicker, { fontFamily: pixel }]}>
-          FEATURED
-        </Text>
-        <View style={styles.top}>
-          <ServerIcon name={server.name} uri={icon} size={72} />
-          <View style={styles.copy}>
-            <Text style={styles.name}>{server.name}</Text>
-            <Text style={styles.address} numberOfLines={1}>
-              {addressOf(server, status)}
-            </Text>
+        <Pressable
+          onPress={onOpen}
+          accessibilityRole="button"
+          accessibilityLabel={`${server.name}, featured server`}
+          accessibilityHint="Opens server details"
+        >
+          <Text maxFontSizeMultiplier={1.3} style={[styles.kicker, { fontFamily: pixel }]}>
+            FEATURED
+          </Text>
+          <View style={styles.top}>
+            <ServerIcon name={server.name} uri={icon} size={72} />
+            <View style={styles.copy}>
+              <Text style={styles.name}>{server.name}</Text>
+              <Text style={styles.address} numberOfLines={1}>
+                {addressOf(server, status)}
+              </Text>
+            </View>
           </View>
-        </View>
-        <View style={styles.motd}>
-          {status ? <MotdText lines={status.motd} dim={!status.online} linesToShow={2} /> : <Text style={styles.waiting}>Checking the server</Text>}
-        </View>
-        <ServerMeta status={status} players />
-        {server.description ? <Text style={styles.description}>{server.description}</Text> : null}
+          <View style={styles.motd}>
+            {status ? <MotdText lines={status.motd} dim={!status.online} linesToShow={2} /> : <Text style={styles.waiting}>Checking the server</Text>}
+          </View>
+          <ServerMeta status={status} players />
+          {server.description ? <Text style={styles.description}>{server.description}</Text> : null}
+        </Pressable>
         <View style={styles.join}>
           <AppButton label="Join" onPress={onJoin} />
         </View>
-      </Pressable>
+      </View>
     </Animated.View>
   );
 }
@@ -85,8 +86,8 @@ const styles = StyleSheet.create({
   },
   kicker: {
     color: colors.accent,
-    fontSize: 9,
-    lineHeight: 14,
+    fontSize: 12,
+    lineHeight: 20,
   },
   top: {
     flexDirection: "row",

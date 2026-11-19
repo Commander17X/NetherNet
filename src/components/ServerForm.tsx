@@ -105,7 +105,7 @@ export function ServerForm({
         label="Name"
         value={name}
         onChangeText={setName}
-        placeholder="Trix Islands"
+        placeholder="e.g. Weekend realm"
         autoCorrect={false}
       />
       <TextField
@@ -116,7 +116,7 @@ export function ServerForm({
           setError(null);
         }}
         onBlur={() => setTouched(true)}
-        placeholder="play.example.com or [::1]:19132"
+        placeholder="e.g. play.example.com"
         autoCapitalize="none"
         autoCorrect={false}
         autoComplete="off"

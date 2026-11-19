@@ -11,13 +11,22 @@
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "gg.nethernet.app",
+      "privacyManifests": {
+        "NSPrivacyAccessedAPITypes": [
+          {
+            "NSPrivacyAccessedAPIType": "NSPrivacyAccessedAPICategoryUserDefaults",
+            "NSPrivacyAccessedAPITypeReasons": ["CA92.1"]
+          }
+        ]
+      },
       "infoPlist": {
         "LSApplicationQueriesSchemes": [
           "minecraft"
         ],
         "NSAppTransportSecurity": {
-          "NSAllowsArbitraryLoads": true
+          "NSAllowsLocalNetworking": true
         },
+        "NSLocalNetworkUsageDescription": "NetherNet connects to a relay on your local network so a Java server can be opened in Bedrock.",
         "ITSAppUsesNonExemptEncryption": false
       }
     },
@@ -40,7 +49,7 @@
         {
           "backgroundColor": "#090B10",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 180
+          "imageWidth": 240
         }
       ]
     ],

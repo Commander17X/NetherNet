@@ -90,14 +90,43 @@ h2 {
   border: 1px solid var(--stroke);
 }
 
-.shot {
-  margin: 28px 0 8px;
-  border-radius: 28px;
-  border: 1px solid var(--stroke);
-  overflow: hidden;
-  background: var(--card);
+.hero {
+  display: grid;
+  grid-template-columns: 96px 1fr;
+  gap: 20px;
+  align-items: center;
+  margin-top: 28px;
 }
-.shot img { display: block; width: min(420px, 100%); margin: 0 auto; }
+.app-icon {
+  width: 96px;
+  height: 96px;
+  border-radius: 22px;
+}
+.phones {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  margin: 28px 0 12px;
+}
+.phone {
+  margin: 0;
+  background: var(--card);
+  border: 1px solid var(--stroke);
+  border-radius: 20px;
+  overflow: hidden;
+}
+.phone img { display: block; width: 100%; height: auto; }
+.phone figcaption {
+  color: var(--secondary);
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 12px 12px;
+}
+@media (max-width: 800px) {
+  .hero { grid-template-columns: 1fr; }
+  .phones { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+.button[aria-disabled="true"] { cursor: default; }
 
 .grid {
   display: grid;

@@ -51,7 +51,7 @@ EXPO_PUBLIC_RELAY_URL=http://192.168.1.20:8787 npx expo start
 
 ### A build you can install
 
-Expo Go is fine for the list and for opening Minecraft. A dev or store build is what you want once you care about `LSApplicationQueriesSchemes` and your own icon. The iOS bundle id in `app.json` is `gg.nethernet.app`. Change it to an identifier your Apple developer account owns before shipping.
+Expo Go is fine for the list and for opening Minecraft. A dev or store build is what you want once you care about `LSApplicationQueriesSchemes` and your own icon. The iOS bundle id in `app.json` is `com.cuboagency.nethernet`. Change it if you ship under a different Apple developer account.
 
 ```bash
 npx eas-cli login

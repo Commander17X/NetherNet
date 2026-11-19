@@ -10,7 +10,7 @@
     "newArchEnabled": true,
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "gg.nethernet.app",
+      "bundleIdentifier": "com.cuboagency.nethernet",
       "privacyManifests": {
         "NSPrivacyAccessedAPITypes": [
           {

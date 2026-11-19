@@ -1,34 +1,79 @@
+import { LinearGradient } from "expo-linear-gradient";
 import { ReactNode } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
-import { colors, space, usePixelFont } from "@/theme";
+import { colors, space, typeScale } from "@/theme";
+import { PixelLabel } from "./hud/PixelLabel";
 
-export function Wordmark() {
-  const pixel = usePixelFont();
+export function Wordmark({ color = colors.accent }: { color?: string }) {
   return (
-    <Text maxFontSizeMultiplier={1.3} style={[styles.logo, { fontFamily: pixel }]}>
+    <PixelLabel size={11} color={color} shadow>
       NETHERNET
-    </Text>
+    </PixelLabel>
   );
 }
 
-export function PageHeader({ title, subtitle }: { title: string; subtitle?: string }) {
+export function PageHeader({
+  title,
+  subtitle,
+  accessory,
+  kicker = true,
+}: {
+  title: string;
+  subtitle?: string;
+  accessory?: ReactNode;
+  kicker?: boolean;
+}) {
   return (
     <View style={styles.header}>
-      <Wordmark />
-      <Text accessibilityRole="header" maxFontSizeMultiplier={1.6} style={styles.title}>
+      {kicker || accessory ? (
+        <View style={styles.kickerRow}>
+          {kicker ? <Wordmark /> : <View />}
+          {accessory}
+        </View>
+      ) : null}
+      <Text accessibilityRole="header" maxFontSizeMultiplier={1.4} style={styles.title}>
         {title}
       </Text>
-      {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+      {subtitle ? (
+        <Text maxFontSizeMultiplier={1.6} style={styles.subtitle}>
+          {subtitle}
+        </Text>
+      ) : null}
     </View>
   );
 }
 
-export function Screen({ children, bottomInset = false }: { children: ReactNode; bottomInset?: boolean }) {
+export function AmbientGlow({ height = 420 }: { height?: number }) {
+  return (
+    <LinearGradient
+      pointerEvents="none"
+      colors={["rgba(245,178,27,0.14)", "rgba(245,178,27,0.05)", "rgba(245,178,27,0)"]}
+      locations={[0, 0.45, 1]}
+      start={{ x: 0.5, y: 0 }}
+      end={{ x: 0.5, y: 1 }}
+      style={[styles.glow, { height }]}
+    />
+  );
+}
+
+export function Screen({
+  children,
+  bottomInset = false,
+  glow = true,
+}: {
+  children: ReactNode;
+  bottomInset?: boolean;
+  glow?: boolean;
+}) {
   return (
     <View style={styles.root}>
-      <SafeAreaView style={styles.safe} edges={bottomInset ? ["top", "left", "right", "bottom"] : ["top", "left", "right"]}>
+      {glow ? <AmbientGlow /> : null}
+      <SafeAreaView
+        style={styles.safe}
+        edges={bottomInset ? ["top", "left", "right", "bottom"] : ["top", "left", "right"]}
+      >
         {children}
       </SafeAreaView>
     </View>
@@ -43,25 +88,29 @@ const styles = StyleSheet.create({
   safe: {
     flex: 1,
   },
+  glow: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+  },
   header: {
-    gap: 4,
+    gap: space.xs,
     paddingTop: space.sm,
   },
-  logo: {
-    color: colors.accent,
-    fontSize: 13,
-    lineHeight: 22,
+  kickerRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    minHeight: 28,
+    marginBottom: space.xs,
   },
   title: {
+    ...typeScale.largeTitle,
     color: colors.text,
-    fontSize: 34,
-    lineHeight: 40,
-    fontWeight: "700",
-    letterSpacing: -0.8,
   },
   subtitle: {
+    ...typeScale.callout,
     color: colors.secondary,
-    fontSize: 16,
-    lineHeight: 22,
   },
 });

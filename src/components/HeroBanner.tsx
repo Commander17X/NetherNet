@@ -6,20 +6,14 @@ import type { ServerStatus } from "@/lib/statusService";
 import type { ServerEntry } from "@/lib/types";
 import { colors, fillParent, radius, space } from "@/theme";
 import { AppButton } from "./AppButton";
+import { Tiled } from "./blocks/Blocks";
+import { textures } from "./blocks/textures";
 import { PixelLabel } from "./hud/PixelLabel";
 import { SignalBars } from "./hud/SignalBars";
 import { MotdText } from "./MotdText";
 import { displayAddress } from "./ServerCard";
 import { EditionChip, PlayerMeter, StatusChip } from "./ServerMeta";
 import { ServerIcon, useServerFavicon } from "./ServerIcon";
-
-const BLOCKS = [
-  { right: 18, top: 18, size: 14, opacity: 0.22 },
-  { right: 38, top: 32, size: 10, opacity: 0.14 },
-  { right: 62, top: 14, size: 8, opacity: 0.1 },
-  { right: 24, top: 60, size: 8, opacity: 0.12 },
-  { right: 90, top: 40, size: 6, opacity: 0.08 },
-];
 
 export function HeroBanner({
   server,
@@ -39,24 +33,14 @@ export function HeroBanner({
   return (
     <Animated.View entering={FadeInDown.duration(380)} style={styles.shadow}>
       <View style={styles.card}>
+        <Tiled source={textures.dirtDark} style={StyleSheet.absoluteFill} />
         <LinearGradient
           pointerEvents="none"
-          colors={["#3A2706", "#1A1309", "#0E1016"]}
-          locations={[0, 0.45, 1]}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 0.9, y: 1 }}
+          colors={["rgba(18,13,9,0.15)", "rgba(18,13,9,0.55)", "rgba(18,13,9,0.88)"]}
+          locations={[0, 0.4, 1]}
           style={StyleSheet.absoluteFill}
         />
-        {BLOCKS.map((block, index) => (
-          <View
-            key={index}
-            pointerEvents="none"
-            style={[
-              styles.block,
-              { right: block.right, top: block.top, width: block.size, height: block.size, opacity: block.opacity },
-            ]}
-          />
-        ))}
+        <Tiled source={textures.grassEdge} style={styles.grass} />
         <View pointerEvents="none" style={styles.bevel} />
         <Pressable
           onPress={onOpen}
@@ -112,30 +96,34 @@ export function HeroBanner({
 const styles = StyleSheet.create({
   shadow: {
     borderRadius: radius.xl,
-    shadowColor: colors.accent,
-    shadowOpacity: 0.18,
+    shadowColor: "#000",
+    shadowOpacity: 0.5,
     shadowRadius: 30,
     shadowOffset: { width: 0, height: 10 },
   },
   card: {
     borderRadius: radius.xl,
-    borderWidth: 1,
-    borderColor: "rgba(245,178,27,0.32)",
+    borderWidth: 3,
+    borderColor: colors.edge,
     overflow: "hidden",
     backgroundColor: colors.card,
   },
-  block: {
+  grass: {
     position: "absolute",
-    backgroundColor: colors.accent,
+    top: 0,
+    left: 0,
+    right: 0,
+    height: 28,
   },
   bevel: {
     ...fillParent,
     borderRadius: radius.xl,
-    borderTopWidth: 1,
-    borderTopColor: "rgba(255,220,150,0.18)",
+    borderTopWidth: 2,
+    borderTopColor: "rgba(255,255,255,0.12)",
   },
   body: {
     padding: space.lg,
+    paddingTop: space.xl + space.sm,
     paddingBottom: space.md,
     gap: space.md,
   },
@@ -144,9 +132,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: space.sm,
     paddingVertical: space.xs,
     borderRadius: radius.pixel,
-    backgroundColor: "rgba(0,0,0,0.35)",
-    borderWidth: 1,
-    borderColor: "rgba(245,178,27,0.3)",
+    backgroundColor: "rgba(0,0,0,0.6)",
+    borderWidth: 2,
+    borderColor: colors.edge,
   },
   identity: {
     flexDirection: "row",
@@ -179,9 +167,9 @@ const styles = StyleSheet.create({
     paddingVertical: space.sm + space.xs,
     paddingHorizontal: space.md,
     borderRadius: radius.sm,
-    backgroundColor: "rgba(0,0,0,0.45)",
-    borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.06)",
+    backgroundColor: "rgba(0,0,0,0.6)",
+    borderWidth: 2,
+    borderColor: colors.edge,
     minHeight: 64,
     justifyContent: "center",
   },

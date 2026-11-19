@@ -1,14 +1,17 @@
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
-import { ScrollView, StyleSheet, Text } from "react-native";
+import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from "react-native";
 
-import { AppButton } from "@/components/AppButton";
+import { EmptyState } from "@/components/EmptyState";
+import { plusSprite } from "@/components/hud/sprites";
 import { PageHeader, Screen } from "@/components/Screen";
 import { ServerForm } from "@/components/ServerForm";
+import { CardSkeleton } from "@/components/Skeleton";
+import { TopBar } from "@/components/TopBar";
 import { findServer } from "@/lib/findServer";
 import { saveDraft } from "@/lib/storage";
 import type { ServerEntry } from "@/lib/types";
-import { colors, space } from "@/theme";
+import { space } from "@/theme";
 
 function readId(value: string | string[] | undefined): string {
   const raw = Array.isArray(value) ? value[0] : value;
@@ -39,35 +42,61 @@ export default function EditServerScreen() {
     };
   }, [id]);
 
+  function goBack() {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace("/");
+    }
+  }
+
   return (
     <Screen bottomInset>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <PageHeader title="Edit server" />
-        {missing ? <Text style={styles.copy}>Only servers you added can be edited.</Text> : null}
-        {server ? (
-          <ServerForm
-            initial={server}
-            onSave={async (draft) => {
-              await saveDraft(draft, server.id);
-              router.back();
-            }}
-          />
-        ) : null}
-        <AppButton label="Back" variant="ghost" onPress={() => router.back()} />
-      </ScrollView>
+      <KeyboardAvoidingView style={styles.fill} behavior={Platform.OS === "ios" ? "padding" : undefined}>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="interactive"
+        >
+          <TopBar onBack={goBack} />
+          <PageHeader title="Edit server" subtitle={server ? server.name : undefined} kicker={false} />
+          {missing ? (
+            <EmptyState
+              sprite={plusSprite}
+              title="Can't edit this one"
+              body="Only servers you added yourself can be edited."
+              action={{ label: "Back", onPress: goBack }}
+            />
+          ) : server ? (
+            <ServerForm
+              initial={server}
+              submitLabel="Save changes"
+              onSave={async (draft) => {
+                await saveDraft(draft, server.id);
+                goBack();
+              }}
+            />
+          ) : (
+            <View>
+              <CardSkeleton />
+            </View>
+          )}
+        </ScrollView>
+      </KeyboardAvoidingView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
-  content: {
-    paddingHorizontal: space.md,
-    paddingBottom: space.xl,
-    gap: space.lg,
+  fill: {
+    flex: 1,
   },
-  copy: {
-    color: colors.secondary,
-    fontSize: 16,
-    lineHeight: 22,
+  content: {
+    width: "100%",
+    maxWidth: 720,
+    alignSelf: "center",
+    paddingHorizontal: space.md,
+    paddingBottom: space.xxl,
+    gap: space.lg,
   },
 });

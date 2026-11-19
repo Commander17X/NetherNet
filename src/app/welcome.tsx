@@ -1,14 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
-import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppButton } from "@/components/AppButton";
+import { BlockIcon, DirtBand, GrassGround, Wordmark } from "@/components/blocks/Blocks";
 import { GlassPanel } from "@/components/hud/GlassPanel";
 import { PixelLabel } from "@/components/hud/PixelLabel";
-import { Screen, Wordmark } from "@/components/Screen";
+import { Screen } from "@/components/Screen";
 import { markOnboardingSeen } from "@/lib/storage";
 import { colors, space } from "@/theme";
 
@@ -36,26 +36,17 @@ const STEPS: { title: string; body: string; icon: keyof typeof Ionicons.glyphMap
 export function WelcomeGuide({ onContinue }: { onContinue: () => void }) {
   const { width } = useWindowDimensions();
   const wide = width >= 760;
+  const insets = useSafeAreaInsets();
 
   return (
-    <Screen bottomInset glow={false}>
-      <LinearGradient
-        pointerEvents="none"
-        colors={["rgba(245,178,27,0.22)", "rgba(245,178,27,0.04)", "rgba(6,8,12,0)"]}
-        locations={[0, 0.4, 1]}
-        style={styles.glow}
-      />
+    <Screen bottomInset band={false}>
+      <DirtBand height={wide ? 400 : 330} />
+      <GrassGround height={insets.bottom} />
       <ScrollView contentContainerStyle={styles.content}>
         <View style={[styles.column, wide && styles.columnWide]}>
           <Animated.View entering={FadeInDown.duration(420)} style={styles.hero}>
-            <View style={styles.iconGlow}>
-              <Image
-                source={require("../../assets/images/icon.png")}
-                style={styles.icon}
-                accessibilityLabel="NetherNet app icon"
-              />
-            </View>
-            <Wordmark />
+            <BlockIcon size={wide ? 96 : 76} />
+            <Wordmark height={26} />
             <Text
               accessibilityRole="header"
               maxFontSizeMultiplier={1.3}
@@ -125,18 +116,10 @@ export default function WelcomeScreen() {
 }
 
 const styles = StyleSheet.create({
-  glow: {
-    position: "absolute",
-    top: 0,
-    left: 0,
-    right: 0,
-    height: 520,
-  },
   content: {
     flexGrow: 1,
     padding: space.lg,
-    paddingBottom: space.xl,
-    justifyContent: "center",
+    paddingBottom: space.xxl,
   },
   column: {
     width: "100%",
@@ -150,19 +133,7 @@ const styles = StyleSheet.create({
   hero: {
     alignItems: "center",
     gap: space.sm + space.xs,
-  },
-  iconGlow: {
-    borderRadius: 28,
-    shadowColor: colors.accent,
-    shadowOpacity: 0.5,
-    shadowRadius: 36,
-    shadowOffset: { width: 0, height: 8 },
-    marginBottom: space.sm,
-  },
-  icon: {
-    width: 92,
-    height: 92,
-    borderRadius: 22,
+    marginBottom: space.xl,
   },
   title: {
     color: colors.text,
@@ -171,6 +142,9 @@ const styles = StyleSheet.create({
     fontWeight: "800",
     letterSpacing: -1.4,
     textAlign: "center",
+    textShadowColor: "rgba(0,0,0,0.7)",
+    textShadowOffset: { width: 0, height: 3 },
+    textShadowRadius: 0,
   },
   titleWide: {
     fontSize: 52,

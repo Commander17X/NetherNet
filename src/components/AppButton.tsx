@@ -9,16 +9,16 @@ type Variant = "primary" | "secondary" | "ghost" | "danger";
 
 const faces: Record<Variant, { background: string; label: string; border: string; top: string; bottom: string }> = {
   primary: {
-    background: colors.accent,
+    background: colors.accentFill,
     label: colors.accentInk,
-    border: "rgba(0,0,0,0.35)",
-    top: "rgba(255,255,255,0.45)",
-    bottom: "rgba(0,0,0,0.22)",
+    border: colors.edge,
+    top: "rgba(255,255,255,0.32)",
+    bottom: "rgba(0,0,0,0.35)",
   },
   secondary: {
     background: "rgba(255,255,255,0.08)",
     label: colors.text,
-    border: colors.strokeStrong,
+    border: colors.edge,
     top: "rgba(255,255,255,0.10)",
     bottom: "rgba(0,0,0,0.3)",
   },
@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
     minHeight: 52,
     paddingHorizontal: space.md + space.xs,
     borderRadius: radius.md,
-    borderWidth: 1,
+    borderWidth: 2,
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
@@ -130,8 +130,8 @@ const styles = StyleSheet.create({
   },
   bevel: {
     ...fillParent,
-    borderTopWidth: 1,
-    borderBottomWidth: 2,
+    borderTopWidth: 2,
+    borderBottomWidth: 3,
   },
   label: {
     fontSize: 17,

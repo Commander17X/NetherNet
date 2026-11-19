@@ -30,14 +30,14 @@ export function GlassPanel({
 const styles = StyleSheet.create({
   panel: {
     overflow: "hidden",
-    borderWidth: 1,
-    borderColor: colors.stroke,
+    borderWidth: 2,
+    borderColor: colors.edge,
   },
   bevel: {
     ...fillParent,
-    borderTopWidth: 1,
+    borderTopWidth: 2,
     borderTopColor: colors.bevelLight,
-    borderBottomWidth: 1,
+    borderBottomWidth: 2,
     borderBottomColor: colors.bevelDark,
   },
 });

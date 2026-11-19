@@ -1,9 +1,13 @@
 import { StyleSheet, Text, View } from "react-native";
 
+import { formatCount } from "@/lib/lobby";
 import type { ServerStatus } from "@/lib/statusService";
+import type { EditionChoice } from "@/lib/types";
 import { colors, radius, space } from "@/theme";
+import { PixelLabel } from "./hud/PixelLabel";
+import { XpBar } from "./hud/XpBar";
 
-export function statusLabel(status?: ServerStatus): { label: string; color: string } {
+export function statusTone(status?: ServerStatus | null): { label: string; color: string } {
   if (!status) {
     return { label: "Checking", color: colors.tertiary };
   }
@@ -16,96 +20,101 @@ export function statusLabel(status?: ServerStatus): { label: string; color: stri
   return { label: "Offline", color: colors.offline };
 }
 
-export function StatusPill({ status }: { status?: ServerStatus }) {
-  const tone = statusLabel(status);
+export function StatusChip({ status }: { status?: ServerStatus | null }) {
+  const tone = statusTone(status);
   return (
-    <View accessible accessibilityLabel={tone.label} style={[styles.pill, { backgroundColor: `${tone.color}22` }]}>
+    <View
+      accessible
+      accessibilityLabel={tone.label}
+      style={[styles.chip, { backgroundColor: `${tone.color}1F`, borderColor: `${tone.color}40` }]}
+    >
       <View style={[styles.dot, { backgroundColor: tone.color }]} />
-      <Text style={[styles.pillText, { color: tone.color }]}>{tone.label}</Text>
+      <Text style={[styles.chipText, { color: tone.color }]}>{tone.label}</Text>
     </View>
   );
 }
 
-export function PlayerBar({ status }: { status?: ServerStatus }) {
-  const online = status?.playersOnline ?? 0;
-  const max = status?.playersMax ?? 0;
-  const ratio = status?.online && max > 0 ? Math.max(0.04, Math.min(1, online / max)) : 0;
+export function editionName(edition: EditionChoice | "java" | "bedrock"): string {
+  return edition === "java" ? "Java" : edition === "bedrock" ? "Bedrock" : "Auto";
+}
+
+export function EditionChip({ edition }: { edition: EditionChoice }) {
+  const color = edition === "java" ? "#FF9F5A" : edition === "bedrock" ? "#5AC8FF" : colors.secondary;
   return (
-    <View style={styles.barTrack}>
-      <View style={[styles.barFill, { width: `${Math.round(ratio * 100)}%` }]} />
+    <View
+      accessible
+      accessibilityLabel={`${editionName(edition)} edition`}
+      style={[styles.edition, { borderColor: `${color}55`, backgroundColor: `${color}14` }]}
+    >
+      <PixelLabel size={7} color={color}>
+        {edition.toUpperCase()}
+      </PixelLabel>
     </View>
   );
 }
 
-export function PingBadge({ ping }: { ping: number | null | undefined }) {
-  const color = ping == null ? colors.tertiary : ping < 120 ? colors.online : ping < 280 ? colors.warning : colors.offline;
-  return (
-    <View style={styles.ping}>
-      <Text style={[styles.pingText, { color }]}>{ping == null ? "—" : `${ping} ms`}</Text>
-    </View>
-  );
-}
-
-export function ServerMeta({ status, players }: { status?: ServerStatus; players?: boolean }) {
+export function PlayerMeter({ status, height = 8 }: { status?: ServerStatus | null; height?: number }) {
+  const online = status?.online ? status.playersOnline : null;
+  const max = status?.online ? status.playersMax : null;
   const count =
-    status?.online && status.playersOnline != null ? `${status.playersOnline}/${status.playersMax ?? "?"}` : null;
+    online == null
+      ? status && !status.online
+        ? "Offline"
+        : "--"
+      : `${formatCount(online)}${max ? ` / ${formatCount(max)}` : ""}`;
   return (
-    <View style={styles.row}>
-      <StatusPill status={status} />
-      <PlayerBar status={status} />
-      {players && count ? <Text style={styles.count}>{count}</Text> : null}
-      <PingBadge ping={status?.pingMs} />
+    <View style={styles.meter}>
+      <XpBar
+        value={online}
+        max={max}
+        height={height}
+        label={online == null ? "Players unknown" : `${online} of ${max ?? "unknown"} players`}
+      />
+      <Text style={styles.count} numberOfLines={1}>
+        {count}
+      </Text>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: space.sm,
-  },
-  pill: {
+  chip: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
     borderRadius: radius.pill,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
+    borderWidth: 1,
+    paddingHorizontal: space.sm + 2,
+    paddingVertical: 3,
+    alignSelf: "flex-start",
   },
   dot: {
     width: 6,
     height: 6,
-    borderRadius: 3,
+    borderRadius: 1,
   },
-  pillText: {
+  chipText: {
     fontSize: 12,
-    fontWeight: "600",
+    fontWeight: "700",
   },
-  barTrack: {
+  edition: {
+    borderRadius: radius.pixel,
+    borderWidth: 1,
+    paddingHorizontal: 6,
+    paddingVertical: 3,
+  },
+  meter: {
     flex: 1,
-    height: 6,
-    borderRadius: radius.pill,
-    backgroundColor: colors.fill,
-    overflow: "hidden",
-  },
-  barFill: {
-    height: "100%",
-    borderRadius: radius.pill,
-    backgroundColor: colors.accent,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: space.sm,
   },
   count: {
     color: colors.secondary,
-    fontSize: 12,
-    fontVariant: ["tabular-nums"],
-  },
-  ping: {
-    minWidth: 52,
-    alignItems: "flex-end",
-  },
-  pingText: {
-    fontSize: 12,
+    fontSize: 13,
     fontWeight: "600",
     fontVariant: ["tabular-nums"],
+    minWidth: 64,
+    textAlign: "right",
   },
 });

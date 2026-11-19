@@ -6,9 +6,19 @@ import { tap } from "@/lib/haptics";
 import type { ServerStatus } from "@/lib/statusService";
 import type { ServerEntry } from "@/lib/types";
 import { colors, radius, space } from "@/theme";
+import { GlassPanel } from "./hud/GlassPanel";
+import { SignalBars } from "./hud/SignalBars";
 import { MotdText } from "./MotdText";
-import { ServerMeta } from "./ServerMeta";
+import { EditionChip, PlayerMeter } from "./ServerMeta";
 import { ServerIcon, useServerFavicon } from "./ServerIcon";
+
+export function displayAddress(server: ServerEntry, status?: ServerStatus | null): string {
+  if (status) {
+    const host = status.connectHost.includes(":") ? `[${status.connectHost}]` : status.connectHost;
+    return `${host}:${status.connectPort}`;
+  }
+  return server.port == null ? server.host : `${server.host}:${server.port}`;
+}
 
 export function ServerCard({
   server,
@@ -26,119 +36,153 @@ export function ServerCard({
   onFavorite: () => void;
 }) {
   const icon = useServerFavicon(server.id, status?.favicon, status?.online);
-  const address = status ? `${status.connectHost}:${status.connectPort}` : server.port == null ? server.host : `${server.host}:${server.port}`;
+  const edition = server.edition === "auto" && status ? status.edition : server.edition;
+  const offline = Boolean(status && !status.online);
 
   return (
-    <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 40).duration(320)}>
-      <View style={styles.card}>
-        <View style={styles.top}>
-          <Pressable
-            onPress={onOpen}
-            accessibilityRole="button"
-            accessibilityLabel={server.name}
-            accessibilityHint="Opens server details"
-            style={styles.main}
-          >
-            <ServerIcon name={server.name} uri={icon} />
-            <View style={styles.copy}>
+    <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 50).duration(340)}>
+      <GlassPanel style={styles.card}>
+        <Pressable
+          onPress={onOpen}
+          accessibilityRole="button"
+          accessibilityLabel={`${server.name}, ${offline ? "offline" : status ? "online" : "checking"}`}
+          accessibilityHint="Opens server details"
+          style={({ pressed }) => [styles.main, pressed && styles.pressed]}
+        >
+          <ServerIcon name={server.name} uri={icon} size={56} />
+          <View style={styles.copy}>
+            <View style={styles.titleRow}>
               <Text style={styles.name} numberOfLines={1}>
                 {server.name}
               </Text>
-              <Text style={styles.address} numberOfLines={1}>
-                {address}
-              </Text>
+              <View style={styles.signal}>
+                <SignalBars ping={status?.pingMs} offline={offline} />
+                <Text style={styles.ping}>
+                  {offline ? "off" : status?.pingMs != null ? `${status.pingMs}ms` : "..."}
+                </Text>
+              </View>
             </View>
-          </Pressable>
+            {status ? (
+              <MotdText lines={status.motd} dim={offline} linesToShow={2} size={14} />
+            ) : (
+              <Text style={styles.waiting}>Pinging {displayAddress(server)}</Text>
+            )}
+          </View>
+        </Pressable>
+        <View style={styles.footer}>
+          <EditionChip edition={edition} />
+          <PlayerMeter status={status} height={7} />
           <Pressable
-            hitSlop={8}
+            hitSlop={10}
             accessibilityRole="button"
-            accessibilityLabel={server.favorite ? "Remove favorite" : "Favorite"}
+            accessibilityLabel={
+              server.favorite ? `Remove ${server.name} from favorites` : `Add ${server.name} to favorites`
+            }
             onPress={() => {
               tap("light");
               onFavorite();
             }}
+            style={styles.star}
           >
-            <Ionicons name={server.favorite ? "star" : "star-outline"} size={22} color={server.favorite ? colors.accent : colors.tertiary} />
+            <Ionicons
+              name={server.favorite ? "star" : "star-outline"}
+              size={20}
+              color={server.favorite ? colors.accent : colors.tertiary}
+            />
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              tap("medium");
+              onJoin();
+            }}
+            style={({ pressed }) => [styles.join, pressed && styles.joinPressed]}
+            accessibilityRole="button"
+            accessibilityLabel={`Join ${server.name}`}
+          >
+            <Text style={styles.joinLabel}>Join</Text>
           </Pressable>
         </View>
-        <Pressable onPress={onOpen} accessibilityRole="button" accessibilityLabel={`${server.name} details`}>
-          {status ? <MotdText lines={status.motd} dim={!status.online} linesToShow={2} /> : <Text style={styles.waiting}>Checking</Text>}
-          <View style={styles.meta}>
-            <ServerMeta status={status} players />
-          </View>
-        </Pressable>
-        <Pressable
-          onPress={() => {
-            tap("medium");
-            onJoin();
-          }}
-          style={styles.join}
-          accessibilityRole="button"
-          accessibilityLabel={`Join ${server.name}`}
-        >
-          <Text style={styles.joinLabel}>Join</Text>
-          <Ionicons name="chevron-forward" size={16} color={colors.accentInk} />
-        </Pressable>
-      </View>
+      </GlassPanel>
     </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.card,
-    borderRadius: radius.lg,
-    borderWidth: 1,
-    borderColor: colors.stroke,
     padding: space.md,
-    gap: space.sm + 4,
-  },
-  top: {
-    flexDirection: "row",
-    gap: space.sm,
-    alignItems: "center",
+    gap: space.md,
   },
   main: {
-    flex: 1,
     flexDirection: "row",
-    gap: space.sm + 4,
-    alignItems: "center",
+    gap: space.sm + space.xs,
+  },
+  pressed: {
+    opacity: 0.75,
   },
   copy: {
     flex: 1,
-    gap: 2,
+    gap: space.xs,
+  },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: space.sm,
   },
   name: {
+    flex: 1,
     color: colors.text,
     fontSize: 17,
+    lineHeight: 22,
     fontWeight: "700",
     letterSpacing: -0.3,
   },
-  address: {
-    color: colors.secondary,
-    fontSize: 13,
+  signal: {
+    flexDirection: "row",
+    alignItems: "flex-end",
+    gap: space.xs + 2,
+  },
+  ping: {
+    color: colors.tertiary,
+    fontSize: 12,
+    fontWeight: "600",
+    fontVariant: ["tabular-nums"],
+    minWidth: 38,
+    textAlign: "right",
   },
   waiting: {
     color: colors.tertiary,
-    fontSize: 15,
+    fontSize: 14,
+    lineHeight: 19,
   },
-  meta: {
-    marginTop: space.sm,
-  },
-  join: {
-    alignSelf: "flex-start",
+  footer: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 2,
+    gap: space.sm + space.xs,
+  },
+  star: {
+    width: 32,
+    height: 32,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  join: {
+    minHeight: 34,
+    paddingHorizontal: space.md,
+    borderRadius: radius.sm,
     backgroundColor: colors.accent,
-    borderRadius: radius.pill,
-    paddingVertical: 8,
-    paddingLeft: 14,
-    paddingRight: 10,
+    alignItems: "center",
+    justifyContent: "center",
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255,255,255,0.45)",
+    borderBottomWidth: 2,
+    borderBottomColor: "rgba(0,0,0,0.25)",
+  },
+  joinPressed: {
+    backgroundColor: colors.accentPressed,
   },
   joinLabel: {
     color: colors.accentInk,
     fontSize: 15,
-    fontWeight: "700",
+    fontWeight: "800",
   },
 });

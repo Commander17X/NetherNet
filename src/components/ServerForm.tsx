@@ -367,9 +367,9 @@ const styles = StyleSheet.create({
     gap: space.sm,
     padding: space.md,
     borderRadius: radius.lg,
-    backgroundColor: "rgba(245,178,27,0.08)",
+    backgroundColor: colors.accentSoft,
     borderWidth: 1,
-    borderColor: "rgba(245,178,27,0.3)",
+    borderColor: colors.accentLine,
   },
   previewErrorText: {
     color: colors.secondary,

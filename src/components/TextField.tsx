@@ -86,7 +86,7 @@ const styles = StyleSheet.create({
   },
   focused: {
     borderColor: colors.accent,
-    backgroundColor: "rgba(245,178,27,0.06)",
+    backgroundColor: colors.accentSoft,
   },
   invalid: {
     borderColor: colors.danger,

@@ -90,7 +90,7 @@ export const starSprite: SpriteMap = {
     ".OYO.OYO.",
     ".OO...OO.",
   ],
-  palette: { O: "#2A1A00", Y: colors.accent },
+  palette: { O: "#2A1A00", Y: colors.warning },
 };
 
 export const plusSprite: SpriteMap = {

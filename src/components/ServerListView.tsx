@@ -289,7 +289,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accentSoft,
     borderRadius: radius.md,
     borderWidth: 1,
-    borderColor: "rgba(245,178,27,0.3)",
+    borderColor: colors.accentLine,
     padding: space.md,
   },
   noteText: {

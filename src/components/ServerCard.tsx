@@ -87,7 +87,7 @@ export function ServerCard({
             <Ionicons
               name={server.favorite ? "star" : "star-outline"}
               size={20}
-              color={server.favorite ? colors.accent : colors.tertiary}
+              color={server.favorite ? colors.warning : colors.tertiary}
             />
           </Pressable>
           <Pressable
@@ -169,7 +169,7 @@ const styles = StyleSheet.create({
     minHeight: 34,
     paddingHorizontal: space.md,
     borderRadius: radius.sm,
-    backgroundColor: colors.accent,
+    backgroundColor: colors.accentFill,
     alignItems: "center",
     justifyContent: "center",
     borderTopWidth: 1,

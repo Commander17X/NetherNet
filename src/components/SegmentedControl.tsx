@@ -92,7 +92,7 @@ const styles = StyleSheet.create({
     bottom: PADDING,
     left: PADDING,
     borderRadius: radius.sm + 1,
-    backgroundColor: colors.accent,
+    backgroundColor: colors.accentFill,
     borderTopWidth: 1,
     borderTopColor: "rgba(255,255,255,0.45)",
     borderBottomWidth: 2,

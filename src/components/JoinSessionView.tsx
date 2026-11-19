@@ -382,7 +382,7 @@ function Step({ index, title, detail, state }: { index: number; title: string; d
           styles.slot,
           { borderColor: color },
           state === "done" && { backgroundColor: "rgba(124,240,58,0.14)" },
-          state === "current" && { backgroundColor: "rgba(245,178,27,0.12)" },
+          state === "current" && { backgroundColor: colors.accentSoft },
           state === "failed" && { backgroundColor: colors.dangerSoft },
         ]}
       >

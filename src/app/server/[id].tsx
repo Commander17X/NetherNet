@@ -171,7 +171,7 @@ export default function ServerDetailScreen() {
           trailing={
             <RoundButton
               icon={current.favorite ? "star" : "star-outline"}
-              color={current.favorite ? colors.accent : colors.text}
+              color={current.favorite ? colors.warning : colors.text}
               label={current.favorite ? "Remove from favorites" : "Add to favorites"}
               onPress={() => {
                 void toggleFavoriteId(current.id).then((favorite) => setServer({ ...current, favorite }));

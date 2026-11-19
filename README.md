@@ -8,11 +8,15 @@ NetherNet does not ship a Minecraft client and does not include Mojang's assets.
 
 ## Screenshots
 
-Put pictures of the app in `docs/screenshots/` when you have them:
+iPhone 6.9 inch marketing images (1320×2868) live in `docs/screenshots/iphone-6.9/`:
 
-- `docs/screenshots/server-list.png` — featured server, scoreboard, hotbar
-- `docs/screenshots/server-detail.png` — MOTD, players, join
-- `docs/screenshots/join.png` — starting, ready, and failed states
+![Server list](docs/screenshots/iphone-6.9/01-server-list.png)
+![Server detail](docs/screenshots/iphone-6.9/02-server-detail.png)
+![Add a server](docs/screenshots/iphone-6.9/03-add-server.png)
+![Join](docs/screenshots/iphone-6.9/04-join.png)
+![Settings](docs/screenshots/iphone-6.9/05-settings.png)
+
+Store copy is in [store/metadata.md](store/metadata.md). The public site, privacy policy, and support page are in `docs/` and publish to [commander17x.github.io/NetherNet](https://commander17x.github.io/NetherNet/).
 
 ## What you can do in the app
 
@@ -36,7 +40,7 @@ npx expo start
 
 Scan the QR code with the camera (iOS) and open the project in Expo Go. The simulator command is `npm run ios`, which needs Xcode.
 
-Set the relay under Options. Use a host the phone can actually reach. `http://127.0.0.1:8787` points at the phone, not your computer. On a home network that is usually something like `http://192.168.1.20:8787`.
+Set the relay under Settings. Use a host the phone can actually reach. `http://127.0.0.1:8787` points at the phone, not your computer. On a home network that is usually something like `http://192.168.1.20:8787`.
 
 `EXPO_PUBLIC_RELAY_URL` is the default relay address for a fresh install:
 

@@ -1,27 +1,25 @@
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback, useState } from "react";
-import { RefreshControl, ScrollView, StyleSheet, Text, useWindowDimensions, View } from "react-native";
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 
 import { buildCatalog, groupServers } from "@/lib/catalog";
 import { RelayClient } from "@/lib/relayClient";
 import { lookupStatus, type ServerStatus } from "@/lib/statusService";
 import { loadServerFile, loadSettings, toggleFavoriteId } from "@/lib/storage";
 import type { ServerEntry } from "@/lib/types";
-import { colors, useBodyFont, usePixelFont } from "@/theme";
-import { HeartRow, HungerRow, SectionLabel } from "./HudBits";
-import { PixelPanel } from "./PixelPanel";
-import { Scoreboard } from "./Scoreboard";
+import { colors, space, usePixelFont } from "@/theme";
+import { CardSkeleton } from "./Skeleton";
+import { EmptyState, SectionTitle } from "./EmptyState";
+import { HeroBanner } from "./HeroBanner";
 import { ServerCard } from "./ServerCard";
 
 export function ServerListView({ favoritesOnly = false }: { favoritesOnly?: boolean }) {
   const router = useRouter();
-  const { width } = useWindowDimensions();
-  const wide = width >= 860;
   const pixel = usePixelFont();
-  const body = useBodyFont();
   const [entries, setEntries] = useState<ServerEntry[]>([]);
   const [statuses, setStatuses] = useState<Record<string, ServerStatus | undefined>>({});
   const [refreshing, setRefreshing] = useState(false);
+  const [loaded, setLoaded] = useState(false);
   const [note, setNote] = useState<string | null>(null);
 
   const pingAll = useCallback(async (catalog: ServerEntry[], fresh: boolean) => {
@@ -47,7 +45,7 @@ export function ServerListView({ favoritesOnly = false }: { favoritesOnly?: bool
           publicServers = await new RelayClient(settings.relayUrl, settings.relayToken).listPublicServers();
           setNote(null);
         } catch (error) {
-          setNote(error instanceof Error ? error.message : "Couldn't reach the relay.");
+          setNote(error instanceof Error ? error.message : "Could not reach the relay.");
         }
       } else {
         setNote(null);
@@ -58,6 +56,7 @@ export function ServerListView({ favoritesOnly = false }: { favoritesOnly?: bool
         publicServers,
       });
       setEntries(catalog);
+      setLoaded(true);
       await pingAll(catalog, fresh);
     },
     [pingAll],
@@ -85,19 +84,18 @@ export function ServerListView({ favoritesOnly = false }: { favoritesOnly?: bool
   }
 
   const sections = [
-    groups.featured ? { title: "Featured", servers: [groups.featured] } : null,
     groups.favorites.length > 0 ? { title: "Favorites", servers: groups.favorites } : null,
     !favoritesOnly && groups.saved.length > 0 ? { title: "Your servers", servers: groups.saved } : null,
     !favoritesOnly && groups.publicServers.length > 0 ? { title: "Public", servers: groups.publicServers } : null,
   ].filter((section): section is { title: string; servers: ServerEntry[] } => section !== null);
 
-  const list = (
+  return (
     <ScrollView
       contentContainerStyle={styles.scroll}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
-          tintColor={colors.gold}
+          tintColor={colors.accent}
           onRefresh={() => {
             setRefreshing(true);
             void load(true).finally(() => setRefreshing(false));
@@ -105,124 +103,124 @@ export function ServerListView({ favoritesOnly = false }: { favoritesOnly?: bool
         />
       }
     >
-      <View style={styles.hud}>
-        <HeartRow />
-        <HungerRow />
+      <View style={styles.header}>
+        <Text style={[styles.logo, { fontFamily: pixel }]}>NETHERNET</Text>
+        <Text style={styles.title}>{favoritesOnly ? "Favorites" : "Servers"}</Text>
+        <Text style={styles.subtitle}>Java and Bedrock, from your phone.</Text>
       </View>
-      <Text style={[styles.wordmark, { fontFamily: pixel }]}>NETHERNET</Text>
-      <Text style={[styles.tagline, { fontFamily: body }]}>Java and Bedrock, from your phone.</Text>
 
-      {!wide ? (
-        <View style={styles.board}>
-          <Scoreboard servers={entries} statuses={statuses} />
+      {note ? (
+        <View style={styles.note}>
+          <Text style={styles.noteText}>{note}</Text>
         </View>
       ) : null}
 
-      <PixelPanel>
-        <Text style={[styles.chat, { fontFamily: body, color: note ? colors.yellow : colors.aqua }]}>
-          {note ? `[!] ${note}` : "[!] Pull to refresh. Tap Join and Minecraft opens with the server added."}
-        </Text>
-      </PixelPanel>
-
-      {sections.length === 0 ? (
-        <View style={styles.empty}>
-          <SectionLabel>{favoritesOnly ? "Favorites" : "Your servers"}</SectionLabel>
-          <Text style={[styles.emptyText, { fontFamily: body }]}>
-            {favoritesOnly ? "Star a server and it will stay in this hotbar slot." : "Add a server from the hotbar. Any host and port works."}
-          </Text>
+      {!loaded ? (
+        <View style={styles.stack}>
+          <CardSkeleton />
+          <CardSkeleton />
+          <CardSkeleton />
         </View>
-      ) : null}
+      ) : (
+        <>
+          {!favoritesOnly && groups.featured ? (
+            <HeroBanner
+              server={groups.featured}
+              status={statuses[groups.featured.id]}
+              onOpen={() => openServer(groups.featured!)}
+              onJoin={() => joinServer(groups.featured!)}
+            />
+          ) : null}
+          {favoritesOnly && groups.featured ? (
+            <HeroBanner
+              server={groups.featured}
+              status={statuses[groups.featured.id]}
+              onOpen={() => openServer(groups.featured!)}
+              onJoin={() => joinServer(groups.featured!)}
+            />
+          ) : null}
 
-      {sections.map((section) => (
-        <View key={section.title}>
-          <SectionLabel>{section.title}</SectionLabel>
-          <View style={styles.stack}>
-            {section.servers.map((server) => (
-              <ServerCard
-                key={server.id}
-                server={server}
-                status={statuses[server.id]}
-                featured={server.featured}
-                onOpen={() => openServer(server)}
-                onJoin={() => joinServer(server)}
-                onFavorite={() => void favorite(server)}
-              />
-            ))}
-          </View>
-        </View>
-      ))}
+          {sections.length === 0 && favoritesOnly && !groups.featured ? (
+            <EmptyState
+              icon="star-outline"
+              title="No favorites yet"
+              body="Star a server and it stays at the top of this list."
+            />
+          ) : null}
+          {sections.length === 0 && !favoritesOnly && !groups.featured ? (
+            <EmptyState
+              icon="add-circle-outline"
+              title="No servers yet"
+              body="Add a hostname, a port, or an IPv6 address."
+              action={{ label: "Add a server", onPress: () => router.push("/add") }}
+            />
+          ) : null}
+
+          {sections.map((section) => (
+            <View key={section.title}>
+              <SectionTitle>{section.title}</SectionTitle>
+              <View style={styles.stack}>
+                {section.servers.map((server, index) => (
+                  <ServerCard
+                    key={server.id}
+                    server={server}
+                    status={statuses[server.id]}
+                    index={index}
+                    onOpen={() => openServer(server)}
+                    onJoin={() => joinServer(server)}
+                    onFavorite={() => void favorite(server)}
+                  />
+                ))}
+              </View>
+            </View>
+          ))}
+        </>
+      )}
     </ScrollView>
-  );
-
-  if (!wide) {
-    return list;
-  }
-
-  return (
-    <View style={styles.wide}>
-      <View style={styles.wideList}>{list}</View>
-      <View style={styles.wideBoard}>
-        <Scoreboard servers={entries} statuses={statuses} />
-      </View>
-    </View>
   );
 }
 
 const styles = StyleSheet.create({
   scroll: {
-    paddingHorizontal: 14,
-    paddingBottom: 24,
-    gap: 8,
+    paddingHorizontal: space.md,
+    paddingBottom: space.xl,
+    gap: space.md,
+    maxWidth: 680,
+    width: "100%",
+    alignSelf: "center",
   },
-  hud: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginTop: 6,
-    gap: 8,
+  header: {
+    paddingTop: space.sm,
+    gap: 4,
   },
-  wordmark: {
-    color: colors.gold,
-    fontSize: 18,
-    lineHeight: 28,
-    textAlign: "center",
-    marginTop: 8,
+  logo: {
+    color: colors.accent,
+    fontSize: 10,
+    lineHeight: 16,
   },
-  tagline: {
-    color: colors.muted,
-    fontSize: 20,
+  title: {
+    color: colors.text,
+    fontSize: 34,
+    lineHeight: 40,
+    fontWeight: "700",
+    letterSpacing: -0.8,
+  },
+  subtitle: {
+    color: colors.secondary,
+    fontSize: 16,
     lineHeight: 22,
-    textAlign: "center",
-    marginBottom: 6,
   },
-  board: {
-    marginBottom: 4,
+  note: {
+    backgroundColor: "rgba(232,163,23,0.12)",
+    borderRadius: 14,
+    padding: space.md,
   },
-  chat: {
-    fontSize: 18,
-    lineHeight: 22,
+  noteText: {
+    color: colors.accent,
+    fontSize: 15,
+    lineHeight: 20,
   },
   stack: {
-    gap: 10,
-  },
-  empty: {
-    marginTop: 8,
-  },
-  emptyText: {
-    color: colors.ink,
-    fontSize: 20,
-    lineHeight: 24,
-  },
-  wide: {
-    flex: 1,
-    flexDirection: "row",
-  },
-  wideList: {
-    flex: 1,
-  },
-  wideBoard: {
-    width: 280,
-    paddingTop: 16,
-    paddingRight: 16,
+    gap: space.sm + 4,
   },
 });

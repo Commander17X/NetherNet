@@ -1,15 +1,25 @@
 import { useState } from "react";
-import { StyleSheet, Text, TextInput, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 
 import { formatAddress, parseServerAddress } from "@/lib/address";
+import { tap } from "@/lib/haptics";
 import { detectEdition } from "@/lib/statusService";
 import type { AuthMode, EditionChoice, ServerDraft, ServerEntry } from "@/lib/types";
-import { colors, useBodyFont, usePixelFont } from "@/theme";
-import { PixelButton } from "./PixelButton";
-import { PixelPanel } from "./PixelPanel";
+import { colors, space } from "@/theme";
+import { AppButton } from "./AppButton";
+import { SegmentedControl } from "./SegmentedControl";
+import { TextField } from "./TextField";
 
-const EDITIONS: EditionChoice[] = ["auto", "java", "bedrock"];
-const AUTH: AuthMode[] = ["online", "offline"];
+const EDITIONS: { value: EditionChoice; label: string }[] = [
+  { value: "auto", label: "Auto" },
+  { value: "java", label: "Java" },
+  { value: "bedrock", label: "Bedrock" },
+];
+
+const AUTH: { value: AuthMode; label: string }[] = [
+  { value: "online", label: "Online" },
+  { value: "offline", label: "Offline" },
+];
 
 export function ServerForm({
   initial,
@@ -18,12 +28,11 @@ export function ServerForm({
   initial?: ServerEntry | null;
   onSave: (draft: ServerDraft) => Promise<void>;
 }) {
-  const pixel = usePixelFont();
-  const body = useBodyFont();
   const [name, setName] = useState(initial?.name ?? "");
   const [address, setAddress] = useState(
     initial ? (initial.port == null ? initial.host : formatAddress(initial.host, initial.port)) : "",
   );
+  const [touched, setTouched] = useState(false);
   const [edition, setEdition] = useState<EditionChoice>(initial?.edition ?? "auto");
   const [authMode, setAuthMode] = useState<AuthMode>(initial?.authMode ?? "online");
   const [error, setError] = useState<string | null>(null);
@@ -31,8 +40,15 @@ export function ServerForm({
   const [busy, setBusy] = useState(false);
 
   const parsed = parseServerAddress(address);
+  const showError = (touched || error != null) && address.trim().length > 0 && !parsed.ok;
+  const addressHint = !address.trim()
+    ? "Hostname, host:port, or [IPv6]:port"
+    : parsed.ok
+      ? `${parsed.address.kind} · ${parsed.address.host}${parsed.address.port == null ? " · SRV or the default port" : ` · port ${parsed.address.port}`}`
+      : null;
 
   async function check() {
+    setTouched(true);
     if (!parsed.ok) {
       setError(parsed.error);
       return;
@@ -42,17 +58,19 @@ export function ServerForm({
     try {
       const found = await detectEdition(parsed.address.host, parsed.address.port);
       if (!found) {
-        setHint("Neither Java nor Bedrock answered. You can still save it and pick the edition yourself.");
+        setHint("Neither edition answered. You can still save it and pick one.");
         return;
       }
       setEdition(found);
-      setHint(found === "java" ? "This looks like a Java server." : "This looks like a Bedrock server.");
+      setHint(found === "java" ? "This looks like Java." : "This looks like Bedrock.");
+      tap("success");
     } finally {
       setBusy(false);
     }
   }
 
   async function save() {
+    setTouched(true);
     if (!parsed.ok) {
       setError(parsed.error);
       return;
@@ -75,7 +93,7 @@ export function ServerForm({
         authMode,
       });
     } catch (saveError) {
-      setError(saveError instanceof Error ? saveError.message : "Couldn't save that server.");
+      setError(saveError instanceof Error ? saveError.message : "Could not save that server.");
     } finally {
       setBusy(false);
     }
@@ -83,80 +101,50 @@ export function ServerForm({
 
   return (
     <View style={styles.wrap}>
-      <PixelPanel>
-        <Text style={[styles.label, { fontFamily: pixel }]}>Name</Text>
-        <TextInput
-          value={name}
-          onChangeText={setName}
-          placeholder="Trix Islands"
-          placeholderTextColor={colors.dark}
-          style={[styles.input, { fontFamily: body }]}
-          autoCorrect={false}
-        />
-        <Text style={[styles.label, { fontFamily: pixel }]}>Address</Text>
-        <TextInput
-          value={address}
-          onChangeText={(value) => {
-            setAddress(value);
-            setError(null);
-          }}
-          placeholder="play.example.com or [::1]:19132"
-          placeholderTextColor={colors.dark}
-          style={[styles.input, { fontFamily: body }]}
-          autoCapitalize="none"
-          autoCorrect={false}
-          autoComplete="off"
-        />
-        <Text style={[styles.preview, { fontFamily: body, color: parsed.ok ? colors.aqua : colors.red }]}>
-          {address.trim().length === 0
-            ? "Hostname, host:port, or [IPv6]:port"
-            : parsed.ok
-              ? `${parsed.address.kind} · ${parsed.address.host}${parsed.address.port == null ? " · port from SRV or the default" : ` · port ${parsed.address.port}`}`
-              : parsed.error}
-        </Text>
+      <TextField
+        label="Name"
+        value={name}
+        onChangeText={setName}
+        placeholder="Trix Islands"
+        autoCorrect={false}
+      />
+      <TextField
+        label="Address"
+        value={address}
+        onChangeText={(value) => {
+          setAddress(value);
+          setError(null);
+        }}
+        onBlur={() => setTouched(true)}
+        placeholder="play.example.com or [::1]:19132"
+        autoCapitalize="none"
+        autoCorrect={false}
+        autoComplete="off"
+        error={showError && !parsed.ok ? parsed.error : error}
+        hint={hint ?? addressHint}
+      />
 
-        <Text style={[styles.label, { fontFamily: pixel }]}>Edition</Text>
-        <View style={styles.choices}>
-          {EDITIONS.map((choice) => (
-            <PixelButton
-              key={choice}
-              compact
-              label={choice}
-              tone={edition === choice ? "gold" : "stone"}
-              onPress={() => setEdition(choice)}
-            />
-          ))}
+      <View style={styles.group}>
+        <Text style={styles.label}>Edition</Text>
+        <SegmentedControl options={EDITIONS} value={edition} onChange={setEdition} />
+        <Text style={styles.help}>Auto asks both status APIs. Java uses your relay. Bedrock opens directly.</Text>
+      </View>
+
+      {edition !== "bedrock" ? (
+        <View style={styles.group}>
+          <Text style={styles.label}>Java login</Text>
+          <SegmentedControl options={AUTH} value={authMode} onChange={setAuthMode} />
+          <Text style={styles.help}>Online uses the Geyser Microsoft login. Offline is for servers that do not check accounts.</Text>
         </View>
-        <Text style={[styles.help, { fontFamily: body }]}>
-          Auto asks both status APIs. Java joins through your relay. Bedrock opens Minecraft directly, on any port.
-        </Text>
+      ) : null}
 
-        {edition !== "bedrock" ? (
-          <>
-            <Text style={[styles.label, { fontFamily: pixel }]}>Java login</Text>
-            <View style={styles.choices}>
-              {AUTH.map((choice) => (
-                <PixelButton
-                  key={choice}
-                  compact
-                  label={choice}
-                  tone={authMode === choice ? "aqua" : "stone"}
-                  onPress={() => setAuthMode(choice)}
-                />
-              ))}
-            </View>
-            <Text style={[styles.help, { fontFamily: body }]}>
-              Online uses the Geyser Microsoft login, without Floodgate. Offline is for servers that do not check accounts.
-            </Text>
-          </>
-        ) : null}
-
-        {hint ? <Text style={[styles.help, { fontFamily: body, color: colors.green }]}>{hint}</Text> : null}
-        {error ? <Text style={[styles.help, { fontFamily: body, color: colors.red }]}>{`[!] ${error}`}</Text> : null}
-      </PixelPanel>
       <View style={styles.actions}>
-        <PixelButton label={busy ? "Working" : "Check"} tone="aqua" onPress={() => void check()} disabled={busy} />
-        <PixelButton label={busy ? "Saving" : "Save"} tone="green" onPress={() => void save()} disabled={busy} />
+        <View style={styles.action}>
+          <AppButton label={busy ? "Checking" : "Check"} variant="secondary" onPress={() => void check()} disabled={busy} />
+        </View>
+        <View style={styles.action}>
+          <AppButton label={busy ? "Saving" : "Save"} onPress={() => void save()} disabled={busy} />
+        </View>
       </View>
     </View>
   );
@@ -164,46 +152,26 @@ export function ServerForm({
 
 const styles = StyleSheet.create({
   wrap: {
-    gap: 12,
+    gap: space.lg,
+  },
+  group: {
+    gap: space.sm,
   },
   label: {
-    color: colors.gold,
-    fontSize: 9,
-    lineHeight: 14,
-    marginTop: 10,
-    marginBottom: 6,
-  },
-  input: {
-    backgroundColor: "#0A0E18",
-    color: colors.white,
-    fontSize: 22,
-    lineHeight: 26,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderWidth: 2,
-    borderTopColor: "#05070D",
-    borderLeftColor: "#05070D",
-    borderRightColor: "#3A4258",
-    borderBottomColor: "#3A4258",
-  },
-  preview: {
-    marginTop: 6,
-    fontSize: 18,
-    lineHeight: 22,
-  },
-  choices: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
+    color: colors.secondary,
+    fontSize: 13,
+    fontWeight: "600",
   },
   help: {
-    color: colors.muted,
-    fontSize: 18,
-    lineHeight: 22,
-    marginTop: 8,
+    color: colors.tertiary,
+    fontSize: 13,
+    lineHeight: 18,
   },
   actions: {
     flexDirection: "row",
-    gap: 10,
+    gap: space.sm,
+  },
+  action: {
+    flex: 1,
   },
 });

@@ -12,7 +12,6 @@ SplashScreen.preventAutoHideAsync().catch(() => undefined);
 export default function RootLayout() {
   const [loaded, error] = useFonts({
     PressStart2P_400Regular: require("@expo-google-fonts/press-start-2p/400Regular/PressStart2P_400Regular.ttf"),
-    VT323_400Regular: require("@expo-google-fonts/vt323/400Regular/VT323_400Regular.ttf"),
   });
 
   useEffect(() => {
@@ -38,7 +37,15 @@ export default function RootLayout() {
         >
           <Stack.Screen name="(tabs)" />
           <Stack.Screen name="server/[id]" />
-          <Stack.Screen name="join/[id]" />
+          <Stack.Screen
+            name="join/[id]"
+            options={{
+              presentation: "formSheet",
+              sheetGrabberVisible: true,
+              sheetAllowedDetents: [0.72, 1],
+              contentStyle: { backgroundColor: colors.bg },
+            }}
+          />
           <Stack.Screen name="edit/[id]" />
         </Stack>
       </FontReadyContext.Provider>

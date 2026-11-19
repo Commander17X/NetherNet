@@ -1,19 +1,18 @@
 import { useRouter } from "expo-router";
-import { ScrollView, StyleSheet, Text } from "react-native";
+import { ScrollView, StyleSheet } from "react-native";
 
-import { Screen } from "@/components/Screen";
+import { PageHeader, Screen } from "@/components/Screen";
 import { ServerForm } from "@/components/ServerForm";
 import { saveDraft } from "@/lib/storage";
-import { colors, usePixelFont } from "@/theme";
+import { space } from "@/theme";
 
 export default function AddServerScreen() {
   const router = useRouter();
-  const pixel = usePixelFont();
 
   return (
     <Screen>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={[styles.title, { fontFamily: pixel }]}>Add a server</Text>
+        <PageHeader title="Add a server" subtitle="Any Java or Bedrock address." />
         <ServerForm
           onSave={async (draft) => {
             const saved = await saveDraft(draft);
@@ -27,13 +26,8 @@ export default function AddServerScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    padding: 16,
-    gap: 12,
-    paddingBottom: 32,
-  },
-  title: {
-    color: colors.gold,
-    fontSize: 14,
-    lineHeight: 22,
+    paddingHorizontal: space.md,
+    paddingBottom: space.xl,
+    gap: space.lg,
   },
 });

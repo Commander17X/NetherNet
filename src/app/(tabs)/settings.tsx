@@ -1,21 +1,19 @@
 import { useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
-import { ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 
-import { PixelButton } from "@/components/PixelButton";
-import { PixelPanel } from "@/components/PixelPanel";
-import { Screen } from "@/components/Screen";
+import { AppButton } from "@/components/AppButton";
+import { PageHeader, Screen } from "@/components/Screen";
+import { TextField } from "@/components/TextField";
 import { RelayClient } from "@/lib/relayClient";
 import { loadSettings, saveSettings } from "@/lib/storage";
-import { colors, useBodyFont, usePixelFont } from "@/theme";
+import { colors, radius, space } from "@/theme";
 
 export default function SettingsScreen() {
-  const pixel = usePixelFont();
-  const body = useBodyFont();
   const [relayUrl, setRelayUrl] = useState("");
   const [relayToken, setRelayToken] = useState("");
   const [message, setMessage] = useState("Java servers join through a NetherNet relay you host.");
-  const [tone, setTone] = useState(colors.muted);
+  const [tone, setTone] = useState(colors.secondary);
 
   useFocusEffect(
     useCallback(() => {
@@ -38,62 +36,50 @@ export default function SettingsScreen() {
   async function check() {
     const stored = await persist();
     if (!stored.relayUrl) {
-      setTone(colors.yellow);
+      setTone(colors.warning);
       setMessage("No relay saved. Bedrock servers still join directly. Java needs a relay.");
       return;
     }
     try {
       const health = await new RelayClient(stored.relayUrl, stored.relayToken).health();
-      setTone(colors.green);
-      const geyser = health.geyser === "ready" ? "Geyser jar is in place." : "Geyser jar is missing on the relay.";
+      setTone(colors.online);
+      const geyser = health.geyser === "ready" ? "Geyser is installed." : "The Geyser jar is missing on the relay.";
       setMessage(`Relay is up at ${health.publicHost}. ${geyser} Open sessions: ${health.sessions}.`);
     } catch (error) {
-      setTone(colors.red);
-      setMessage(error instanceof Error ? error.message : "Couldn't reach the relay.");
+      setTone(colors.danger);
+      setMessage(error instanceof Error ? error.message : "Could not reach the relay.");
     }
   }
 
   return (
     <Screen>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        <Text style={[styles.title, { fontFamily: pixel }]}>Options</Text>
-        <PixelPanel>
-          <Text style={[styles.label, { fontFamily: pixel }]}>Relay address</Text>
-          <TextInput
-            value={relayUrl}
-            onChangeText={setRelayUrl}
-            autoCapitalize="none"
-            autoCorrect={false}
-            placeholder="http://192.168.1.20:8787"
-            placeholderTextColor={colors.dark}
-            style={[styles.input, { fontFamily: body }]}
-          />
-          <Text style={[styles.label, { fontFamily: pixel }]}>Relay token</Text>
-          <TextInput
-            value={relayToken}
-            onChangeText={setRelayToken}
-            autoCapitalize="none"
-            autoCorrect={false}
-            secureTextEntry
-            placeholder="Only if you set RELAY_TOKEN"
-            placeholderTextColor={colors.dark}
-            style={[styles.input, { fontFamily: body }]}
-          />
-          <Text style={[styles.help, { fontFamily: body }]}>
-            The phone has to reach this address. Use the LAN IP of your computer while testing, or the public hostname
-            once the relay is on a server. Leave the token empty unless the relay requires one.
-          </Text>
-          <Text style={[styles.help, { fontFamily: body, color: tone }]}>{`[!] ${message}`}</Text>
-        </PixelPanel>
-        <View style={styles.actions}>
-          <PixelButton label="Save and check" tone="gold" onPress={() => void check()} />
+        <PageHeader title="Settings" subtitle="The relay is only used for Java servers." />
+        <TextField
+          label="Relay address"
+          value={relayUrl}
+          onChangeText={setRelayUrl}
+          autoCapitalize="none"
+          autoCorrect={false}
+          placeholder="http://192.168.1.20:8787"
+          hint="Use a LAN IP or public hostname the phone can reach."
+        />
+        <TextField
+          label="Relay token"
+          value={relayToken}
+          onChangeText={setRelayToken}
+          autoCapitalize="none"
+          autoCorrect={false}
+          secureTextEntry
+          placeholder="Only if you set RELAY_TOKEN"
+        />
+        <View style={[styles.note, { borderColor: tone }]}>
+          <Text style={[styles.noteText, { color: tone }]}>{message}</Text>
         </View>
-        <PixelPanel>
-          <Text style={[styles.help, { fontFamily: body }]}>
-            Bedrock servers open with minecraft:// and the port you typed, or 19132 when you only gave a domain. Java
-            servers get a short-lived Geyser session on the relay, then the same Minecraft link points at that session.
-          </Text>
-        </PixelPanel>
+        <AppButton label="Save and check" onPress={() => void check()} />
+        <Text style={styles.help}>
+          Bedrock opens with minecraft:// on the port you typed, or 19132 for a plain domain. Java gets a short Geyser session, then the same link points at the relay.
+        </Text>
       </ScrollView>
     </Screen>
   );
@@ -101,39 +87,23 @@ export default function SettingsScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    padding: 16,
-    gap: 12,
-    paddingBottom: 32,
+    paddingHorizontal: space.md,
+    paddingBottom: space.xl,
+    gap: space.lg,
   },
-  title: {
-    color: colors.gold,
-    fontSize: 14,
-    lineHeight: 22,
+  note: {
+    borderRadius: radius.md,
+    borderWidth: 1,
+    backgroundColor: colors.fill,
+    padding: space.md,
   },
-  label: {
-    color: colors.gold,
-    fontSize: 9,
-    lineHeight: 14,
-    marginBottom: 6,
-    marginTop: 8,
-  },
-  input: {
-    backgroundColor: "#0A0E18",
-    color: colors.white,
-    fontSize: 22,
-    lineHeight: 26,
-    paddingHorizontal: 10,
-    paddingVertical: 8,
-    borderWidth: 2,
-    borderColor: "#3A4258",
+  noteText: {
+    fontSize: 15,
+    lineHeight: 21,
   },
   help: {
-    color: colors.muted,
-    fontSize: 18,
-    lineHeight: 22,
-    marginTop: 10,
-  },
-  actions: {
-    alignSelf: "flex-start",
+    color: colors.tertiary,
+    fontSize: 13,
+    lineHeight: 18,
   },
 });

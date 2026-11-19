@@ -1,196 +1,122 @@
-import { Image } from "expo-image";
+import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
+import Animated, { FadeInDown } from "react-native-reanimated";
 
+import { tap } from "@/lib/haptics";
 import type { ServerStatus } from "@/lib/statusService";
 import type { ServerEntry } from "@/lib/types";
-import { colors, useBodyFont, usePixelFont } from "@/theme";
+import { colors, radius, space } from "@/theme";
 import { MotdText } from "./MotdText";
-import { PixelButton } from "./PixelButton";
-import { PixelPanel } from "./PixelPanel";
-
-function pingColor(ping: number | null): string {
-  if (ping == null) {
-    return colors.gray;
-  }
-  if (ping < 120) {
-    return colors.green;
-  }
-  if (ping < 280) {
-    return colors.yellow;
-  }
-  return colors.red;
-}
-
-function editionLabel(server: ServerEntry, status?: ServerStatus): string {
-  const edition = server.edition === "auto" ? status?.edition ?? "auto" : server.edition;
-  if (edition === "java") {
-    return "JAVA";
-  }
-  if (edition === "bedrock") {
-    return "BEDROCK";
-  }
-  return "AUTO";
-}
+import { ServerMeta } from "./ServerMeta";
+import { ServerIcon, useServerFavicon } from "./ServerIcon";
 
 export function ServerCard({
   server,
   status,
-  featured = false,
+  index = 0,
   onOpen,
   onJoin,
   onFavorite,
 }: {
   server: ServerEntry;
   status?: ServerStatus;
-  featured?: boolean;
+  index?: number;
   onOpen: () => void;
   onJoin: () => void;
   onFavorite: () => void;
 }) {
-  const pixel = usePixelFont();
-  const body = useBodyFont();
-  const players =
-    status && !status.unreachable && status.playersOnline != null
-      ? `${status.playersOnline}/${status.playersMax ?? "?"}`
-      : status?.unreachable
-        ? "—"
-        : "...";
-  const address = status ? `${status.connectHost}:${status.connectPort}` : server.port ? `${server.host}:${server.port}` : server.host;
+  const icon = useServerFavicon(server.id, status?.favicon, status?.online);
+  const address = status ? `${status.connectHost}:${status.connectPort}` : server.port == null ? server.host : `${server.host}:${server.port}`;
 
   return (
-    <PixelPanel accent={featured ? colors.gold : colors.black}>
-      <Pressable onPress={onOpen} accessibilityRole="button" accessibilityLabel={server.name}>
+    <Animated.View entering={FadeInDown.delay(Math.min(index, 8) * 40).duration(320)}>
+      <Pressable onPress={onOpen} accessibilityRole="button" accessibilityLabel={server.name} style={styles.card}>
         <View style={styles.top}>
-          {status?.favicon ? (
-            <Image source={{ uri: status.favicon }} style={styles.icon} />
-          ) : (
-            <View style={styles.iconFallback}>
-              <Text style={[styles.iconLetter, { fontFamily: pixel }]}>{server.name.slice(0, 1).toUpperCase()}</Text>
-            </View>
-          )}
-          <View style={styles.titleBlock}>
-            <View style={styles.titleRow}>
-              <Text style={[styles.name, { fontFamily: pixel }]} numberOfLines={2}>
-                {server.name}
-              </Text>
-              <Pressable onPress={onFavorite} hitSlop={8} accessibilityLabel={server.favorite ? "Unfavorite" : "Favorite"}>
-                <Text style={[styles.star, { color: server.favorite ? colors.yellow : colors.dark }]}>★</Text>
-              </Pressable>
-            </View>
-            {featured ? <Text style={[styles.tag, { fontFamily: pixel }]}>FEATURED</Text> : null}
-            <Text style={[styles.address, { fontFamily: body }]} numberOfLines={1}>
+          <ServerIcon name={server.name} uri={icon} />
+          <View style={styles.copy}>
+            <Text style={styles.name} numberOfLines={1}>
+              {server.name}
+            </Text>
+            <Text style={styles.address} numberOfLines={1}>
               {address}
             </Text>
           </View>
+          <Pressable
+            hitSlop={8}
+            accessibilityLabel={server.favorite ? "Remove favorite" : "Favorite"}
+            onPress={() => {
+              tap("light");
+              onFavorite();
+            }}
+          >
+            <Ionicons name={server.favorite ? "star" : "star-outline"} size={22} color={server.favorite ? colors.accent : colors.tertiary} />
+          </Pressable>
         </View>
-        <View style={styles.motd}>
-          {status ? (
-            <MotdText lines={status.motd} dim={!status.online} />
-          ) : (
-            <Text style={[styles.waiting, { fontFamily: body }]}>Pinging…</Text>
-          )}
-        </View>
-        <View style={styles.meta}>
-          <Text style={[styles.badge, { fontFamily: pixel, color: editionLabel(server, status) === "BEDROCK" ? colors.aqua : colors.gold }]}>
-            {editionLabel(server, status)}
-          </Text>
-          <Text style={[styles.metaText, { fontFamily: body, color: status?.online ? colors.green : colors.red }]}>
-            {status ? (status.online ? players : status.unreachable ? "No response" : "Offline") : "…"}
-          </Text>
-          <Text style={[styles.metaText, { fontFamily: body }]} numberOfLines={1}>
-            {status?.version ?? ""}
-          </Text>
-          <Text style={[styles.metaText, { fontFamily: body, color: pingColor(status?.pingMs ?? null) }]}>
-            {status?.pingMs != null ? `${status.pingMs} ms` : ""}
-          </Text>
-        </View>
+        {status ? <MotdText lines={status.motd} dim={!status.online} linesToShow={2} /> : <Text style={styles.waiting}>Checking</Text>}
+        <ServerMeta status={status} players />
+        <Pressable
+          onPress={() => {
+            tap("medium");
+            onJoin();
+          }}
+          style={styles.join}
+          accessibilityRole="button"
+          accessibilityLabel={`Join ${server.name}`}
+        >
+          <Text style={styles.joinLabel}>Join</Text>
+          <Ionicons name="chevron-forward" size={16} color={colors.accentInk} />
+        </Pressable>
       </Pressable>
-      <View style={styles.join}>
-        <PixelButton label="Join" tone="green" onPress={onJoin} />
-      </View>
-    </PixelPanel>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
+  card: {
+    backgroundColor: colors.card,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.stroke,
+    padding: space.md,
+    gap: space.sm + 4,
+  },
   top: {
     flexDirection: "row",
-    gap: 10,
-  },
-  icon: {
-    width: 52,
-    height: 52,
-    backgroundColor: colors.slot,
-  },
-  iconFallback: {
-    width: 52,
-    height: 52,
-    backgroundColor: "#24304A",
+    gap: space.sm + 4,
     alignItems: "center",
-    justifyContent: "center",
-    borderWidth: 2,
-    borderColor: colors.dark,
   },
-  iconLetter: {
-    color: colors.gold,
-    fontSize: 16,
-    lineHeight: 22,
-  },
-  titleBlock: {
+  copy: {
     flex: 1,
     gap: 2,
   },
-  titleRow: {
-    flexDirection: "row",
-    alignItems: "flex-start",
-    gap: 8,
-  },
   name: {
-    color: colors.white,
-    fontSize: 11,
-    lineHeight: 16,
-    flex: 1,
-  },
-  star: {
-    fontSize: 22,
-    lineHeight: 24,
-  },
-  tag: {
-    color: colors.gold,
-    fontSize: 8,
-    lineHeight: 12,
+    color: colors.text,
+    fontSize: 17,
+    fontWeight: "700",
+    letterSpacing: -0.3,
   },
   address: {
-    color: colors.aqua,
-    fontSize: 18,
-    lineHeight: 20,
-  },
-  motd: {
-    marginTop: 8,
-    minHeight: 24,
+    color: colors.secondary,
+    fontSize: 13,
   },
   waiting: {
-    color: colors.gray,
-    fontSize: 18,
-  },
-  meta: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    alignItems: "center",
-    marginTop: 8,
-  },
-  badge: {
-    fontSize: 8,
-    lineHeight: 12,
-  },
-  metaText: {
-    color: colors.gray,
-    fontSize: 18,
-    lineHeight: 20,
+    color: colors.tertiary,
+    fontSize: 15,
   },
   join: {
-    marginTop: 10,
     alignSelf: "flex-start",
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 2,
+    backgroundColor: colors.accent,
+    borderRadius: radius.pill,
+    paddingVertical: 8,
+    paddingLeft: 14,
+    paddingRight: 10,
+  },
+  joinLabel: {
+    color: colors.accentInk,
+    fontSize: 15,
+    fontWeight: "700",
   },
 });

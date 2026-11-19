@@ -2,12 +2,12 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 
+import { AppButton } from "@/components/AppButton";
 import { JoinSessionView } from "@/components/JoinSessionView";
-import { PixelButton } from "@/components/PixelButton";
 import { Screen } from "@/components/Screen";
 import { findServer } from "@/lib/findServer";
 import type { ServerEntry } from "@/lib/types";
-import { colors, useBodyFont, usePixelFont } from "@/theme";
+import { colors, space } from "@/theme";
 
 function readId(value: string | string[] | undefined): string {
   const raw = Array.isArray(value) ? value[0] : value;
@@ -17,8 +17,6 @@ function readId(value: string | string[] | undefined): string {
 export default function JoinScreen() {
   const params = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const pixel = usePixelFont();
-  const body = useBodyFont();
   const [server, setServer] = useState<ServerEntry | null>(null);
   const [missing, setMissing] = useState(false);
 
@@ -42,12 +40,11 @@ export default function JoinScreen() {
   return (
     <Screen bottomInset>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={[styles.title, { fontFamily: pixel }]}>Join</Text>
-        {missing ? <Text style={[styles.copy, { fontFamily: body }]}>That server is not in the list anymore.</Text> : null}
-        {!server && !missing ? <Text style={[styles.copy, { fontFamily: body }]}>Loading…</Text> : null}
+        {missing ? <Text style={styles.copy}>That server is not in the list anymore.</Text> : null}
+        {!server && !missing ? <Text style={styles.copy}>Loading</Text> : null}
         {server ? <JoinSessionView server={server} /> : null}
         <View style={styles.back}>
-          <PixelButton label="Back" tone="stone" onPress={() => router.back()} />
+          <AppButton label="Close" variant="ghost" onPress={() => router.back()} />
         </View>
       </ScrollView>
     </Screen>
@@ -56,20 +53,15 @@ export default function JoinScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    padding: 16,
-    gap: 12,
-    paddingBottom: 28,
-  },
-  title: {
-    color: colors.gold,
-    fontSize: 14,
-    lineHeight: 22,
+    padding: space.md,
+    gap: space.md,
+    paddingBottom: space.xl,
   },
   copy: {
-    color: colors.ink,
-    fontSize: 20,
+    color: colors.secondary,
+    fontSize: 16,
   },
   back: {
-    alignSelf: "flex-start",
+    alignSelf: "center",
   },
 });

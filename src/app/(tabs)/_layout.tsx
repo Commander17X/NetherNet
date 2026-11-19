@@ -1,12 +1,12 @@
 import { Tabs } from "expo-router";
 
-import { Hotbar } from "@/components/Hotbar";
+import { TabBar } from "@/components/TabBar";
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{ headerShown: false }}
-      tabBar={(props) => <Hotbar state={props.state} onSelect={props.navigateToTab} />}
+      tabBar={(props) => <TabBar state={props.state} onSelect={props.navigateToTab} />}
     >
       <Tabs.Screen name="index" options={{ title: "Servers" }} />
       <Tabs.Screen name="add" options={{ title: "Add" }} />

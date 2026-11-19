@@ -2,16 +2,18 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Alert, ScrollView, StyleSheet, Text, View } from "react-native";
 
+import { AppButton } from "@/components/AppButton";
 import { MotdText } from "@/components/MotdText";
-import { PixelButton } from "@/components/PixelButton";
-import { PixelPanel } from "@/components/PixelPanel";
-import { Screen } from "@/components/Screen";
+import { PageHeader, Screen } from "@/components/Screen";
+import { ServerIcon, useServerFavicon } from "@/components/ServerIcon";
+import { ServerMeta } from "@/components/ServerMeta";
 import { findServer } from "@/lib/findServer";
 import { formatAddress } from "@/lib/address";
 import { lookupStatus, type ServerStatus } from "@/lib/statusService";
 import { removeSavedServer, toggleFavoriteId } from "@/lib/storage";
 import type { ServerEntry } from "@/lib/types";
-import { colors, useBodyFont, usePixelFont } from "@/theme";
+import { colors, radius, space } from "@/theme";
+import { CardSkeleton } from "@/components/Skeleton";
 
 function readId(value: string | string[] | undefined): string {
   const raw = Array.isArray(value) ? value[0] : value;
@@ -21,11 +23,10 @@ function readId(value: string | string[] | undefined): string {
 export default function ServerDetailScreen() {
   const params = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const pixel = usePixelFont();
-  const body = useBodyFont();
   const [server, setServer] = useState<ServerEntry | null>(null);
   const [status, setStatus] = useState<ServerStatus | null>(null);
   const [missing, setMissing] = useState(false);
+  const icon = useServerFavicon(server?.id ?? "", status?.favicon, status?.online);
 
   useEffect(() => {
     const id = readId(params.id);
@@ -58,8 +59,8 @@ export default function ServerDetailScreen() {
     return (
       <Screen bottomInset>
         <View style={styles.content}>
-          <Text style={[styles.title, { fontFamily: pixel }]}>Missing server</Text>
-          <PixelButton label="Back" tone="stone" onPress={() => router.back()} />
+          <PageHeader title="Missing server" />
+          <AppButton label="Back" variant="secondary" onPress={() => router.back()} />
         </View>
       </Screen>
     );
@@ -69,7 +70,7 @@ export default function ServerDetailScreen() {
     return (
       <Screen bottomInset>
         <View style={styles.content}>
-          <Text style={[styles.waiting, { fontFamily: body }]}>Loading…</Text>
+          <CardSkeleton />
         </View>
       </Screen>
     );
@@ -77,65 +78,59 @@ export default function ServerDetailScreen() {
 
   const typedAddress = server.port == null ? server.host : formatAddress(server.host, server.port);
   const liveAddress = status ? `${status.connectHost}:${status.connectPort}` : typedAddress;
+  const edition = server.edition === "auto" ? status?.edition ?? "auto" : server.edition;
 
   return (
     <Screen bottomInset>
       <ScrollView contentContainerStyle={styles.content}>
-        <Text style={[styles.title, { fontFamily: pixel }]}>{server.name}</Text>
-        <PixelPanel accent={server.featured ? colors.gold : colors.black}>
-          <Text style={[styles.address, { fontFamily: body }]}>{liveAddress}</Text>
-          <Text style={[styles.meta, { fontFamily: body }]}>
-            {`${server.edition === "auto" ? status?.edition ?? "auto" : server.edition} · saved as ${typedAddress}`}
-          </Text>
-          {status ? <MotdText lines={status.motd} dim={!status.online} /> : <Text style={[styles.meta, { fontFamily: body }]}>Pinging…</Text>}
-          <Text style={[styles.meta, { fontFamily: body, color: status?.online ? colors.green : colors.red }]}>
-            {status
-              ? status.online
-                ? `${status.playersOnline ?? 0}/${status.playersMax ?? "?"} online`
-                : status.unreachable
-                  ? status.error ?? "No response"
-                  : "Offline"
-              : "Pinging…"}
-          </Text>
-          {status?.version ? <Text style={[styles.meta, { fontFamily: body }]}>{status.version}</Text> : null}
-          {status?.gameMode ? <Text style={[styles.meta, { fontFamily: body }]}>{status.gameMode}</Text> : null}
-          {status?.pingMs != null ? <Text style={[styles.meta, { fontFamily: body }]}>{`${status.pingMs} ms`}</Text> : null}
-          {server.description ? <Text style={[styles.meta, { fontFamily: body }]}>{server.description}</Text> : null}
-        </PixelPanel>
+        <PageHeader title={server.name} subtitle={liveAddress} />
+        <View style={styles.card}>
+          <ServerIcon name={server.name} uri={icon} size={84} />
+          {status ? <MotdText lines={status.motd} dim={!status.online} linesToShow={3} /> : <Text style={styles.waiting}>Checking the server</Text>}
+          <ServerMeta status={status ?? undefined} players />
+          <Text style={styles.meta}>{`${edition} · saved as ${typedAddress}`}</Text>
+          {status?.version ? <Text style={styles.meta}>{status.version}</Text> : null}
+          {status?.gameMode ? <Text style={styles.meta}>{status.gameMode}</Text> : null}
+          {server.description ? <Text style={styles.meta}>{server.description}</Text> : null}
+        </View>
+        <AppButton label="Join" onPress={() => router.push(`/join/${encodeURIComponent(server.id)}`)} />
         <View style={styles.actions}>
-          <PixelButton label="Join" tone="green" onPress={() => router.push(`/join/${encodeURIComponent(server.id)}`)} />
-          <PixelButton
-            label={server.favorite ? "Unfavorite" : "Favorite"}
-            tone="gold"
-            onPress={() => {
-              void toggleFavoriteId(server.id).then(() => {
-                setServer({ ...server, favorite: !server.favorite });
-              });
-            }}
-          />
-          {server.source === "saved" ? (
-            <PixelButton label="Edit" tone="aqua" onPress={() => router.push(`/edit/${encodeURIComponent(server.id)}`)} />
-          ) : null}
-          {server.source === "saved" ? (
-            <PixelButton
-              label="Remove"
-              tone="red"
+          <View style={styles.action}>
+            <AppButton
+              label={server.favorite ? "Unfavorite" : "Favorite"}
+              variant="secondary"
               onPress={() => {
-                Alert.alert("Remove server", `Remove ${server.name}?`, [
-                  { text: "Cancel", style: "cancel" },
-                  {
-                    text: "Remove",
-                    style: "destructive",
-                    onPress: () => {
-                      void removeSavedServer(server.id).then(() => router.back());
-                    },
-                  },
-                ]);
+                void toggleFavoriteId(server.id).then(() => {
+                  setServer({ ...server, favorite: !server.favorite });
+                });
               }}
             />
+          </View>
+          {server.source === "saved" ? (
+            <View style={styles.action}>
+              <AppButton label="Edit" variant="secondary" onPress={() => router.push(`/edit/${encodeURIComponent(server.id)}`)} />
+            </View>
           ) : null}
-          <PixelButton label="Back" tone="stone" onPress={() => router.back()} />
         </View>
+        {server.source === "saved" ? (
+          <AppButton
+            label="Remove"
+            variant="danger"
+            onPress={() => {
+              Alert.alert("Remove server", `Remove ${server.name}?`, [
+                { text: "Cancel", style: "cancel" },
+                {
+                  text: "Remove",
+                  style: "destructive",
+                  onPress: () => {
+                    void removeSavedServer(server.id).then(() => router.back());
+                  },
+                },
+              ]);
+            }}
+          />
+        ) : null}
+        <AppButton label="Back" variant="ghost" onPress={() => router.back()} />
       </ScrollView>
     </Screen>
   );
@@ -143,34 +138,33 @@ export default function ServerDetailScreen() {
 
 const styles = StyleSheet.create({
   content: {
-    padding: 16,
-    gap: 12,
-    paddingBottom: 28,
+    paddingHorizontal: space.md,
+    paddingBottom: space.xl,
+    gap: space.md,
   },
-  title: {
-    color: colors.gold,
-    fontSize: 14,
-    lineHeight: 22,
-  },
-  address: {
-    color: colors.aqua,
-    fontSize: 22,
-    lineHeight: 24,
-    marginBottom: 4,
-  },
-  meta: {
-    color: colors.ink,
-    fontSize: 18,
-    lineHeight: 22,
-    marginTop: 6,
+  card: {
+    backgroundColor: colors.card,
+    borderRadius: radius.lg,
+    borderWidth: 1,
+    borderColor: colors.stroke,
+    padding: space.lg,
+    gap: space.md,
+    alignItems: "flex-start",
   },
   waiting: {
-    color: colors.muted,
-    fontSize: 20,
+    color: colors.tertiary,
+    fontSize: 15,
+  },
+  meta: {
+    color: colors.secondary,
+    fontSize: 15,
+    lineHeight: 21,
   },
   actions: {
     flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 10,
+    gap: space.sm,
+  },
+  action: {
+    flex: 1,
   },
 });

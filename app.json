@@ -60,7 +60,11 @@
     "extra": {
       "relayUrl": "",
       "privacyPolicyUrl": "https://commander17x.github.io/NetherNet/privacy/",
-      "supportUrl": "https://commander17x.github.io/NetherNet/support/"
-    }
+      "supportUrl": "https://commander17x.github.io/NetherNet/support/",
+      "eas": {
+        "projectId": "d55e9dd8-2eb7-48a8-8bb5-0aadf553f68c"
+      }
+    },
+    "owner": "jaimyk"
   }
 }

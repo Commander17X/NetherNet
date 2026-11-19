@@ -111,6 +111,7 @@ export function HeroBanner({
 
 const styles = StyleSheet.create({
   shadow: {
+    borderRadius: radius.xl,
     shadowColor: colors.accent,
     shadowOpacity: 0.18,
     shadowRadius: 30,

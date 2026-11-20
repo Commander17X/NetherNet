@@ -1,7 +1,9 @@
+import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInDown } from "react-native-reanimated";
 
+import { tap } from "@/lib/haptics";
 import type { ServerStatus } from "@/lib/statusService";
 import type { ServerEntry } from "@/lib/types";
 import { colors, fillParent, radius, space } from "@/theme";
@@ -20,11 +22,13 @@ export function HeroBanner({
   status,
   onOpen,
   onJoin,
+  onFavorite,
 }: {
   server: ServerEntry;
   status?: ServerStatus;
   onOpen: () => void;
   onJoin: () => void;
+  onFavorite?: () => void;
 }) {
   const icon = useServerFavicon(server.id, status?.favicon, status?.online);
   const offline = Boolean(status && !status.online);
@@ -86,7 +90,30 @@ export function HeroBanner({
           {server.description ? <Text style={styles.description}>{server.description}</Text> : null}
         </Pressable>
         <View style={styles.actions}>
-          <AppButton label={`Join ${server.name}`} icon="play" onPress={onJoin} />
+          <View style={styles.join}>
+            <AppButton label={`Join ${server.name}`} icon="play" onPress={onJoin} />
+          </View>
+          {onFavorite ? (
+            <Pressable
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={
+                server.favorite ? `Remove ${server.name} from favorites` : `Add ${server.name} to favorites`
+              }
+              accessibilityState={{ selected: server.favorite }}
+              onPress={() => {
+                tap("light");
+                onFavorite();
+              }}
+              style={({ pressed }) => [styles.star, server.favorite && styles.starOn, pressed && styles.starPressed]}
+            >
+              <Ionicons
+                name={server.favorite ? "star" : "star-outline"}
+                size={22}
+                color={server.favorite ? colors.warning : colors.text}
+              />
+            </Pressable>
+          ) : null}
         </View>
       </View>
     </Animated.View>
@@ -202,7 +229,31 @@ const styles = StyleSheet.create({
     lineHeight: 21,
   },
   actions: {
+    flexDirection: "row",
+    alignItems: "stretch",
+    gap: space.sm,
     paddingHorizontal: space.lg,
     paddingBottom: space.lg,
+  },
+  join: {
+    flex: 1,
+  },
+  star: {
+    width: 52,
+    minHeight: 52,
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: radius.md,
+    borderWidth: 2,
+    borderColor: colors.edge,
+    backgroundColor: "rgba(0,0,0,0.45)",
+  },
+  starOn: {
+    backgroundColor: "rgba(245,178,27,0.16)",
+    borderColor: "rgba(245,178,27,0.55)",
+  },
+  starPressed: {
+    opacity: 0.75,
+    transform: [{ scale: 0.96 }],
   },
 });

@@ -24,7 +24,12 @@
           "minecraft"
         ],
         "NSAppTransportSecurity": {
-          "NSAllowsLocalNetworking": true
+          "NSAllowsLocalNetworking": true,
+          "NSExceptionDomains": {
+            "151.243.241.246": {
+              "NSExceptionAllowsInsecureHTTPLoads": true
+            }
+          }
         },
         "NSLocalNetworkUsageDescription": "NetherNet connects to a relay on your local network so a Java server can be opened in Bedrock.",
         "ITSAppUsesNonExemptEncryption": false

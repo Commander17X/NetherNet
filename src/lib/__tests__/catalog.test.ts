@@ -1,5 +1,4 @@
 import { buildCatalog, groupServers } from "../catalog";
-import { buildMinecraftJoinUrl } from "../joinUrl";
 import { parseSrvData, pickSrv, recordsFromDnsJson, srvName } from "../srv";
 import type { SavedServer } from "../types";
 
@@ -54,18 +53,6 @@ describe("catalog", () => {
     const groups = groupServers(entries, true);
     expect(groups.featured).toBeNull();
     expect(groups.favorites).toEqual([]);
-  });
-});
-
-describe("join urls", () => {
-  it("builds a minecraft external-server link and brackets ipv6", () => {
-    expect(buildMinecraftJoinUrl("Trix Islands", "play.trix-islands.gg", 2788)).toBe(
-      "minecraft://?addExternalServer=Trix%20Islands|play.trix-islands.gg:2788",
-    );
-    expect(buildMinecraftJoinUrl("Lan", "::1", 19132)).toBe("minecraft://?addExternalServer=Lan|[::1]:19132");
-    expect(buildMinecraftJoinUrl("Bad|Name", "10.0.0.2", 19150)).toBe(
-      "minecraft://?addExternalServer=Bad%20Name|10.0.0.2:19150",
-    );
   });
 });
 

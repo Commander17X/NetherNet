@@ -9,6 +9,7 @@ export function buildCatalog(input: {
   saved: SavedServer[];
   favoriteIds: string[];
   publicServers: PublicServer[];
+  favoriteServers?: PublicServer[];
 }): ServerEntry[] {
   const favorites = new Set(input.favoriteIds);
   const featured: ServerEntry = {
@@ -35,7 +36,10 @@ export function buildCatalog(input: {
   ]);
 
   const publicEntries: ServerEntry[] = [];
-  for (const server of input.publicServers) {
+  const publicId = (id: string) => (id.startsWith("public:") ? id : `public:${id}`);
+  const live = new Set(input.publicServers.map((server) => publicId(server.id)));
+  const kept = (input.favoriteServers ?? []).filter((server) => favorites.has(server.id) && !live.has(server.id));
+  for (const server of [...input.publicServers, ...kept]) {
     if (!server.host || !server.name || (server.edition !== "java" && server.edition !== "bedrock")) {
       continue;
     }
@@ -44,7 +48,7 @@ export function buildCatalog(input: {
       continue;
     }
     seen.add(key);
-    const id = server.id.startsWith("public:") ? server.id : `public:${server.id}`;
+    const id = publicId(server.id);
     publicEntries.push({
       id,
       name: server.name,

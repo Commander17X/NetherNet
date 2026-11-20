@@ -16,6 +16,7 @@ export async function findServer(id: string): Promise<ServerEntry | null> {
   const catalog = buildCatalog({
     saved: file.servers,
     favoriteIds: file.favoriteIds,
+    favoriteServers: file.favoriteServers,
     publicServers,
   });
   return catalog.find((server) => server.id === id) ?? null;

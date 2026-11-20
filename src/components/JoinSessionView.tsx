@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import * as Clipboard from "expo-clipboard";
 import * as Linking from "expo-linking";
 import { useRouter } from "expo-router";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import Animated, { FadeInDown, useAnimatedStyle, useSharedValue, withTiming } from "react-native-reanimated";
 
@@ -10,7 +10,7 @@ import { formatAddress } from "@/lib/address";
 import { friendlyError } from "@/lib/errors";
 import { parseFavicon } from "@/lib/favicon";
 import { tap } from "@/lib/haptics";
-import { buildMinecraftJoinUrl } from "@/lib/joinUrl";
+import { buildMinecraftAddServerUrl, buildMinecraftConnectUrl } from "@/lib/joinUrl";
 import { RelayClient, type RelaySession } from "@/lib/relayClient";
 import { lookupStatus, type ServerStatus } from "@/lib/statusService";
 import { loadSettings } from "@/lib/storage";
@@ -31,7 +31,7 @@ type Target = { host: string; port: number; via: "relay" | "direct" };
 const STEPS = [
   { title: "Find the server", detail: "Status and the real address" },
   { title: "Open a relay session", detail: "Java servers get a Geyser bridge" },
-  { title: "Open Minecraft", detail: "Bedrock adds it to your list" },
+  { title: "Open Minecraft", detail: "Bedrock connects you straight in" },
 ];
 
 const FAILURES: Record<FailureKind, { title: string; icon: keyof typeof Ionicons.glyphMap }> = {
@@ -72,6 +72,8 @@ export function JoinSessionView({ server, onClose }: { server: ServerEntry; onCl
   const [opened, setOpened] = useState(false);
   const [installHelp, setInstallHelp] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [added, setAdded] = useState(false);
+  const autoOpened = useRef(-1);
   const progress = useSharedValue(0);
 
   useEffect(() => {
@@ -181,20 +183,50 @@ export function JoinSessionView({ server, onClose }: { server: ServerEntry; onCl
     };
   }, [attempt, server.authMode, server.edition, server.host, server.name, server.port]);
 
+  async function launch(url: string): Promise<boolean> {
+    try {
+      if (!(await Linking.canOpenURL(url))) {
+        throw new Error("Minecraft is not installed");
+      }
+      await Linking.openURL(url);
+      setInstallHelp(false);
+      return true;
+    } catch {
+      setInstallHelp(true);
+      setMessage("Minecraft didn't open. Install it from the App Store, or add the address by hand.");
+      return false;
+    }
+  }
+
   async function openMinecraft() {
     if (!target) {
       return;
     }
-    try {
-      await Linking.openURL(buildMinecraftJoinUrl(server.name, target.host, target.port));
+    if (await launch(buildMinecraftConnectUrl(target.host, target.port))) {
       setOpened(true);
-      setInstallHelp(false);
-      setMessage("Minecraft should be open. Tap the server in your list to join.");
-    } catch {
-      setInstallHelp(true);
-      setMessage("Minecraft didn't open. Install it from the App Store, or add the address by hand.");
+      setMessage("Minecraft is connecting you now. Come back here if you need the address again.");
     }
   }
+
+  async function addToList() {
+    if (!target) {
+      return;
+    }
+    if (await launch(buildMinecraftAddServerUrl(server.name, target.host, target.port))) {
+      tap("success");
+      setAdded(true);
+      setMessage(`${server.name} is in your Minecraft server list. Find it under Play, then Servers.`);
+    }
+  }
+
+  useEffect(() => {
+    if (phase === "ready" && target && autoOpened.current !== attempt) {
+      autoOpened.current = attempt;
+      void openMinecraft();
+    }
+    // openMinecraft only reads target, which is listed.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [phase, target, attempt]);
 
   async function copyTarget() {
     if (!target) {
@@ -339,9 +371,15 @@ export function JoinSessionView({ server, onClose }: { server: ServerEntry; onCl
             />
           </Pressable>
           <AppButton
-            label={opened ? "Open Minecraft again" : "Open Minecraft"}
+            label={opened ? "Join again" : "Join in Minecraft"}
             icon="game-controller"
             onPress={() => void openMinecraft()}
+          />
+          <AppButton
+            label={added ? "Added to server list" : "Add to Minecraft server list"}
+            icon={added ? "checkmark" : "add-circle-outline"}
+            variant="secondary"
+            onPress={() => void addToList()}
           />
           {target.via === "relay" && server.authMode === "online" ? (
             <Text style={styles.help}>

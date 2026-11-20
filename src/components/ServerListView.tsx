@@ -9,8 +9,8 @@ import { feedForChange, pushFeed, summarizeLobby, type FeedItem } from "@/lib/lo
 import { recordPing } from "@/lib/pingHistory";
 import { RelayClient } from "@/lib/relayClient";
 import { lookupStatus, type ServerStatus } from "@/lib/statusService";
-import { loadServerFile, loadSettings, toggleFavoriteId } from "@/lib/storage";
-import type { ServerEntry } from "@/lib/types";
+import { loadServerFile, loadSettings, setFavorite } from "@/lib/storage";
+import type { PublicServer, ServerEntry } from "@/lib/types";
 import { colors, radius, space } from "@/theme";
 import { EmptyState, SectionTitle } from "./EmptyState";
 import { HeroBanner } from "./HeroBanner";
@@ -39,6 +39,7 @@ export function ServerListView({ favoritesOnly = false }: { favoritesOnly?: bool
   const [loaded, setLoaded] = useState(false);
   const [note, setNote] = useState<string | null>(null);
   const lastSeen = useRef<Record<string, ServerStatus | undefined>>({});
+  const publicCache = useRef<PublicServer[]>([]);
 
   const pingAll = useCallback(async (catalog: ServerEntry[], fresh: boolean) => {
     await Promise.all(
@@ -60,19 +61,28 @@ export function ServerListView({ favoritesOnly = false }: { favoritesOnly?: bool
 
   const load = useCallback(
     async (fresh: boolean) => {
-      const [file, settings] = await Promise.all([loadServerFile(), loadSettings()]);
-      let publicServers: Awaited<ReturnType<RelayClient["listPublicServers"]>> = [];
+      const settings = await loadSettings();
+      let publicServers: PublicServer[] = [];
       if (settings.relayUrl) {
         try {
           publicServers = await new RelayClient(settings.relayUrl, settings.relayToken).listPublicServers();
+          publicCache.current = publicServers;
           setNote(null);
         } catch (error) {
           setNote(friendlyError(error, "The relay didn't answer, so popular servers are hidden."));
         }
       } else {
+        publicCache.current = [];
         setNote(null);
       }
-      const catalog = buildCatalog({ saved: file.servers, favoriteIds: file.favoriteIds, publicServers });
+      // Read favorites after the relay answers, so a star tapped meanwhile is not lost.
+      const file = await loadServerFile();
+      const catalog = buildCatalog({
+        saved: file.servers,
+        favoriteIds: file.favoriteIds,
+        favoriteServers: file.favoriteServers,
+        publicServers,
+      });
       setEntries(catalog);
       setLoaded(true);
       await pingAll(catalog, fresh);
@@ -101,8 +111,18 @@ export function ServerListView({ favoritesOnly = false }: { favoritesOnly?: bool
   }
 
   async function favorite(server: ServerEntry) {
-    await toggleFavoriteId(server.id);
-    await load(false);
+    const next = !server.favorite;
+    setEntries((current) => current.map((row) => (row.id === server.id ? { ...row, favorite: next } : row)));
+    await setFavorite(server, next);
+    const file = await loadServerFile();
+    setEntries(
+      buildCatalog({
+        saved: file.servers,
+        favoriteIds: file.favoriteIds,
+        favoriteServers: file.favoriteServers,
+        publicServers: publicCache.current,
+      }),
+    );
   }
 
   const sections = [
@@ -153,6 +173,7 @@ export function ServerListView({ favoritesOnly = false }: { favoritesOnly?: bool
               status={statuses[groups.featured.id]}
               onOpen={() => openServer(groups.featured!)}
               onJoin={() => joinServer(groups.featured!)}
+              onFavorite={() => void favorite(groups.featured!)}
             />
           ) : null}
 

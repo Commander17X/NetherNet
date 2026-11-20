@@ -22,7 +22,7 @@ import { tap } from "@/lib/haptics";
 import { formatCount } from "@/lib/lobby";
 import { loadPings, recordPing } from "@/lib/pingHistory";
 import { lookupStatus, type ServerStatus } from "@/lib/statusService";
-import { removeSavedServer, toggleFavoriteId } from "@/lib/storage";
+import { removeSavedServer, toggleFavorite } from "@/lib/storage";
 import type { ServerEntry } from "@/lib/types";
 import { colors, radius, space } from "@/theme";
 
@@ -174,7 +174,9 @@ export default function ServerDetailScreen() {
               color={current.favorite ? colors.warning : colors.text}
               label={current.favorite ? "Remove from favorites" : "Add to favorites"}
               onPress={() => {
-                void toggleFavoriteId(current.id).then((favorite) => setServer({ ...current, favorite }));
+                tap("light");
+                setServer({ ...current, favorite: !current.favorite });
+                void toggleFavorite(current);
               }}
             />
           }
